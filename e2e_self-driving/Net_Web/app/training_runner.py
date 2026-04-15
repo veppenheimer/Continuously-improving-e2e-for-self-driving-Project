@@ -22,7 +22,8 @@ from torch.utils.data import DataLoader
 
 from app import database as db
 from app.config import settings
-from app.state import append_loss_point, get_controls, merge_progress, release_controls
+from app.state import append_loss_point, get_controls, get_progress, merge_progress, release_controls
+from app.training_artifacts import write_progress_snapshot
 from datasets import AutoDriveDataset, AutoDriveListDataset
 from models import AutoDriveNet
 from utils import AverageMeter
@@ -84,6 +85,13 @@ def _wait_resume(ctrl) -> bool:
     while ctrl.pause.is_set() and not ctrl.stop.is_set():
         time.sleep(0.2)
     return not ctrl.stop.is_set()
+
+
+def _persist_progress_snapshot(task_id: str, artifacts_dir: Path) -> None:
+    try:
+        write_progress_snapshot(artifacts_dir, get_progress(task_id))
+    except Exception:
+        pass
 
 
 def _read_list_pairs(list_file: Path) -> list[tuple[Path, float]]:
@@ -346,6 +354,7 @@ def _run_competition_model_training(
             "VENET_SAVE_NAME": ckpt_name,
             "VENET_BEST_SAVE_NAME": f"best_{ckpt_name}",
             "VENET_LOG_DIR": os.fspath((out_dir / "runs").resolve()),
+            "PYTHONUNBUFFERED": "1",
         }
     )
     r_classic = re.compile(r"epoch:\s*(\d+)")
@@ -835,9 +844,11 @@ def training_worker(
                 "message": "训练完成",
             },
         )
+        _persist_progress_snapshot(task_id, artifacts_dir)
     except Exception:
         err = traceback.format_exc()
         db.update_task_status(task_id, user_id, "failed", err[:2000])
         merge_progress(task_id, {"status": "failed", "message": err[:500]})
+        _persist_progress_snapshot(task_id, artifacts_dir)
     finally:
         release_controls(task_id)

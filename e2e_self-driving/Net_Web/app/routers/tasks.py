@@ -29,6 +29,7 @@ from app.schemas import (
 from app.security import safe_decode
 from app.services import inference as infer_svc
 from app import state
+from app.training_artifacts import load_competition_artifact_snapshot, read_progress_snapshot
 from app.training_runner import training_worker
 
 router = APIRouter(tags=["tasks"])
@@ -65,6 +66,61 @@ def _fallback_from_row(row) -> dict:
         "competitionLiteProgress": (100.0 if row["status"] == "completed" and extra_lite else (0.0 if extra_lite else None)),
         "competitionLiteText": ("已完成" if row["status"] == "completed" and extra_lite else None),
     }
+
+
+def _fallback_progress_dict(fb: dict) -> dict:
+    dom = fb["domain_augmentation"]
+    total = fb["totalEpochs"]
+    return {
+        "status": fb["status"],
+        "currentEpoch": total if fb["status"] == "completed" else 0,
+        "totalEpochs": total,
+        "baseline": {"trainLossSeries": [], "valLossSeries": []},
+        "augmented": ({"trainLossSeries": [], "valLossSeries": []} if dom else None),
+        "competitionClass": (
+            {"trainLossSeries": [], "valLossSeries": []}
+            if fb.get("competitionClassProgress") is not None
+            else None
+        ),
+        "competitionLite": (
+            {"trainLossSeries": [], "valLossSeries": []}
+            if fb.get("competitionLiteProgress") is not None
+            else None
+        ),
+        "baselineProgress": fb.get("baselineProgress", 0.0),
+        "domainAugmentationProgress": fb.get("domainAugmentationProgress"),
+        "domainAugmentationText": fb.get("domainAugmentationText"),
+        "augmentedProgress": fb.get("augmentedProgress"),
+        "competitionClassProgress": fb.get("competitionClassProgress"),
+        "competitionClassText": fb.get("competitionClassText"),
+        "competitionLiteProgress": fb.get("competitionLiteProgress"),
+        "competitionLiteText": fb.get("competitionLiteText"),
+        "message": fb.get("message"),
+    }
+
+
+def _empty_loss_bundle(value) -> bool:
+    if not isinstance(value, dict):
+        return True
+    return not (value.get("trainLossSeries") or value.get("valLossSeries"))
+
+
+def _progress_for_task(task_id: str, fb: dict) -> dict:
+    task_dir = settings.data_dir / "tasks" / task_id
+    raw = state.get_progress(task_id)
+    if not raw:
+        raw = read_progress_snapshot(task_dir) or {}
+    raw = dict(raw) if raw else _fallback_progress_dict(fb)
+
+    needs_class = fb.get("competitionClassProgress") is not None and _empty_loss_bundle(raw.get("competitionClass"))
+    needs_lite = fb.get("competitionLiteProgress") is not None and _empty_loss_bundle(raw.get("competitionLite"))
+    if needs_class or needs_lite:
+        artifact_progress = load_competition_artifact_snapshot(task_dir).get("progress", {})
+        if needs_class and artifact_progress.get("competitionClass"):
+            raw["competitionClass"] = artifact_progress["competitionClass"]
+        if needs_lite and artifact_progress.get("competitionLite"):
+            raw["competitionLite"] = artifact_progress["competitionLite"]
+    return raw
 
 
 _STEERING_CLASSES = [1.72, 1.64, 1.5, 0.0, -1.5, -1.56, -1.58, -1.6, -1.62]
@@ -209,29 +265,8 @@ def get_task_progress(task_id: str, user: CurrentUser):
     row = db.get_task(task_id, user["id"])
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="任务不存在")
-    raw = state.get_progress(task_id)
     fb = _fallback_from_row(row)
-    if not raw:
-        dom = fb["domain_augmentation"]
-        total = fb["totalEpochs"]
-        raw = {
-            "status": fb["status"],
-            "currentEpoch": total if fb["status"] == "completed" else 0,
-            "totalEpochs": total,
-            "baseline": {"trainLossSeries": [], "valLossSeries": []},
-            "augmented": ({"trainLossSeries": [], "valLossSeries": []} if dom else None),
-            "competitionClass": ({"trainLossSeries": [], "valLossSeries": []} if fb.get("competitionClassProgress") is not None else None),
-            "competitionLite": ({"trainLossSeries": [], "valLossSeries": []} if fb.get("competitionLiteProgress") is not None else None),
-            "baselineProgress": fb.get("baselineProgress", 0.0),
-            "domainAugmentationProgress": fb.get("domainAugmentationProgress"),
-            "domainAugmentationText": fb.get("domainAugmentationText"),
-            "augmentedProgress": fb.get("augmentedProgress"),
-            "competitionClassProgress": fb.get("competitionClassProgress"),
-            "competitionClassText": fb.get("competitionClassText"),
-            "competitionLiteProgress": fb.get("competitionLiteProgress"),
-            "competitionLiteText": fb.get("competitionLiteText"),
-            "message": fb.get("message"),
-        }
+    raw = _progress_for_task(task_id, fb)
     return build_task_progress(raw, fb)
 
 
@@ -286,6 +321,27 @@ def get_results(task_id: str, user: CurrentUser):
             params = json.loads(row["task_params_json"])
     except Exception:
         params = {}
+
+    artifact_metrics = load_competition_artifact_snapshot(settings.data_dir / "tasks" / task_id).get("metrics", {})
+
+    def _has_metric_values(value) -> bool:
+        if not isinstance(value, dict):
+            return False
+        return any(
+            value.get(k) not in (None, 0, 0.0)
+            for k in ("finalTrainLoss", "finalValLoss", "finalTrainAcc", "finalValAcc")
+        )
+
+    def _hydrate_metric(key: str) -> None:
+        artifact_value = artifact_metrics.get(key)
+        if artifact_value and not _has_metric_values(data.get(key)):
+            data[key] = artifact_value
+
+    if params.get("useCompetitionClassModel"):
+        _hydrate_metric("competitionClass")
+    if params.get("useCompetitionLiteModel"):
+        _hydrate_metric("competitionLite")
+
     if params.get("useCompetitionClassModel") and "competitionClass" not in data:
         data["competitionClass"] = {
             "finalTrainLoss": 0.0,
@@ -445,37 +501,8 @@ async def task_progress_ws(websocket: WebSocket, task_id: str, token: str | None
             row = db.get_task(task_id, user_id)
             if row is None:
                 break
-            raw = state.get_progress(task_id)
             fb = _fallback_from_row(row)
-            if not raw:
-                dom = fb["domain_augmentation"]
-                total = fb["totalEpochs"]
-                raw = {
-                    "status": fb["status"],
-                    "currentEpoch": total if fb["status"] == "completed" else 0,
-                    "totalEpochs": total,
-                    "baseline": {"trainLossSeries": [], "valLossSeries": []},
-                    "augmented": ({"trainLossSeries": [], "valLossSeries": []} if dom else None),
-                    "competitionClass": (
-                        {"trainLossSeries": [], "valLossSeries": []}
-                        if fb.get("competitionClassProgress") is not None
-                        else None
-                    ),
-                    "competitionLite": (
-                        {"trainLossSeries": [], "valLossSeries": []}
-                        if fb.get("competitionLiteProgress") is not None
-                        else None
-                    ),
-                    "baselineProgress": fb.get("baselineProgress", 0.0),
-                    "domainAugmentationProgress": fb.get("domainAugmentationProgress"),
-                    "domainAugmentationText": fb.get("domainAugmentationText"),
-                    "augmentedProgress": fb.get("augmentedProgress"),
-                    "competitionClassProgress": fb.get("competitionClassProgress"),
-                    "competitionClassText": fb.get("competitionClassText"),
-                    "competitionLiteProgress": fb.get("competitionLiteProgress"),
-                    "competitionLiteText": fb.get("competitionLiteText"),
-                    "message": fb.get("message"),
-                }
+            raw = _progress_for_task(task_id, fb)
             prog = build_task_progress(raw, fb)
             await websocket.send_text(prog.model_dump_json(by_alias=True))
             if row["status"] in ("completed", "failed", "stopped"):
