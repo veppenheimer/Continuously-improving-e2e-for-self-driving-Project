@@ -1,26 +1,57 @@
-import onnxruntime as ort
-import numpy as np
+﻿#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""Run ONNX inference for a regression model using explicit preprocess settings."""
+
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
 import cv2
-import torch
+import numpy as np
+import onnxruntime as ort
 
-onnx_path = "0606x_static_quantized_model.onnx"
-img_path = "image_test/2_0.0000.jpg"
+from steering_preprocess import DEFAULT_PREPROCESS_CONFIG, preprocess_bgr_to_chw_float, preprocess_config_from_dict
 
-# 读取并预处理图像
-img = cv2.imread(img_path)  # 读取图片
-img = cv2.resize(img, (160, 120))  # 调整大小（确保符合模型输入）
-img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)  # 颜色空间转换（如果模型需要）
 
-# 归一化处理
-img = img.astype(np.float32) / 255.0  # 归一化到 [0, 1]
-img = np.transpose(img, (2, 0, 1))  # 调整通道顺序 (H, W, C) -> (C, H, W)
-img = np.expand_dims(img, axis=0)  # 增加 batch 维度 (1, C, H, W)
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Run ONNX inference for a steering regression model.")
+    parser.add_argument("--onnx", required=True)
+    parser.add_argument("--image", required=True)
+    parser.add_argument("--height", type=int, default=None)
+    parser.add_argument("--width", type=int, default=None)
+    parser.add_argument("--color-space", default=None)
+    args = parser.parse_args()
 
-# 加载 ONNX 运行时
-ort_session = ort.InferenceSession(onnx_path)
+    onnx_path = Path(args.onnx).expanduser().resolve()
+    image_path = Path(args.image).expanduser().resolve()
 
-# 进行推理
-ort_inputs = {ort_session.get_inputs()[0].name: img}
-ort_output = ort_session.run(None, ort_inputs)
+    preprocess = DEFAULT_PREPROCESS_CONFIG
+    if args.height and args.width:
+        preprocess = preprocess_config_from_dict(
+            {
+                "colorSpace": args.color_space or preprocess.color_space,
+                "inputSize": [args.height, args.width],
+                "useRoi": False,
+            },
+            fallback=preprocess,
+        )
+    elif args.color_space:
+        preprocess = preprocess_config_from_dict({"colorSpace": args.color_space}, fallback=preprocess)
 
-print(f"ONNX 预测结果: {ort_output[0][0]}")
+    img = cv2.imread(str(image_path))
+    if img is None:
+        raise FileNotFoundError(f"failed to read image: {image_path}")
+    chw = preprocess_bgr_to_chw_float(img, config=preprocess)
+    batch = np.expand_dims(chw.astype(np.float32), axis=0)
+
+    session = ort.InferenceSession(str(onnx_path))
+    output = session.run(None, {session.get_inputs()[0].name: batch})
+    print(f"onnx: {onnx_path}")
+    print(f"image: {image_path}")
+    print(f"preprocess: color_space={preprocess.color_space} input_size={preprocess.input_size} use_roi={preprocess.use_roi}")
+    print(f"prediction: {float(np.asarray(output[0]).reshape(-1)[0]):.6f}")
+
+
+if __name__ == "__main__":
+    main()

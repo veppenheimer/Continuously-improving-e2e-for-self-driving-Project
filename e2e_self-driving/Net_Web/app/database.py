@@ -50,18 +50,30 @@ def init_db() -> None:
                 email TEXT,
                 created_at TEXT NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS projects (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                name TEXT NOT NULL,
+                is_default INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id),
+                UNIQUE (user_id, name)
+            );
             CREATE TABLE IF NOT EXISTS datasets (
                 id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
+                project_id TEXT NOT NULL,
                 name TEXT NOT NULL,
                 root_dir TEXT NOT NULL,
                 image_count INTEGER NOT NULL,
                 created_at TEXT NOT NULL,
-                FOREIGN KEY (user_id) REFERENCES users(id)
+                FOREIGN KEY (user_id) REFERENCES users(id),
+                FOREIGN KEY (project_id) REFERENCES projects(id)
             );
             CREATE TABLE IF NOT EXISTS tasks (
                 id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
+                project_id TEXT NOT NULL,
                 dataset_id TEXT NOT NULL,
                 status TEXT NOT NULL,
                 learning_rate REAL NOT NULL,
@@ -76,12 +88,16 @@ def init_db() -> None:
                 augmented_ckpt TEXT,
                 result_json TEXT,
                 FOREIGN KEY (user_id) REFERENCES users(id),
+                FOREIGN KEY (project_id) REFERENCES projects(id),
                 FOREIGN KEY (dataset_id) REFERENCES datasets(id)
             );
             """
         )
         _migrate_tasks_display_name(conn)
         _migrate_tasks_params_json(conn)
+        _migrate_datasets_project_id(conn)
+        _migrate_tasks_project_id(conn)
+        _backfill_default_projects(conn)
 
 
 def _migrate_tasks_display_name(conn: sqlite3.Connection) -> None:
@@ -98,6 +114,62 @@ def _migrate_tasks_params_json(conn: sqlite3.Connection) -> None:
         conn.execute("ALTER TABLE tasks ADD COLUMN task_params_json TEXT")
 
 
+def _migrate_datasets_project_id(conn: sqlite3.Connection) -> None:
+    cur = conn.execute("PRAGMA table_info(datasets)")
+    cols = {row[1] for row in cur.fetchall()}
+    if "project_id" not in cols:
+        conn.execute("ALTER TABLE datasets ADD COLUMN project_id TEXT")
+
+
+def _migrate_tasks_project_id(conn: sqlite3.Connection) -> None:
+    cur = conn.execute("PRAGMA table_info(tasks)")
+    cols = {row[1] for row in cur.fetchall()}
+    if "project_id" not in cols:
+        conn.execute("ALTER TABLE tasks ADD COLUMN project_id TEXT")
+
+
+def _ensure_default_project(conn: sqlite3.Connection, user_id: str) -> str:
+    cur = conn.execute(
+        "SELECT id FROM projects WHERE user_id = ? AND is_default = 1 ORDER BY created_at ASC LIMIT 1",
+        (user_id,),
+    )
+    row = cur.fetchone()
+    if row is not None:
+        return str(row["id"])
+    pid = str(uuid.uuid4())
+    conn.execute(
+        """INSERT INTO projects (id, user_id, name, is_default, created_at)
+           VALUES (?, ?, ?, 1, ?)""",
+        (pid, user_id, "默认项目", _utc_now()),
+    )
+    return pid
+
+
+def _backfill_default_projects(conn: sqlite3.Connection) -> None:
+    users = conn.execute("SELECT id FROM users").fetchall()
+    for u in users:
+        user_id = str(u["id"])
+        default_pid = _ensure_default_project(conn, user_id)
+        conn.execute(
+            "UPDATE datasets SET project_id = ? WHERE user_id = ? AND (project_id IS NULL OR project_id = '')",
+            (default_pid, user_id),
+        )
+        conn.execute(
+            """
+            UPDATE tasks
+            SET project_id = (
+                SELECT d.project_id FROM datasets d WHERE d.id = tasks.dataset_id
+            )
+            WHERE user_id = ? AND (project_id IS NULL OR project_id = '')
+            """,
+            (user_id,),
+        )
+        conn.execute(
+            "UPDATE tasks SET project_id = ? WHERE user_id = ? AND (project_id IS NULL OR project_id = '')",
+            (default_pid, user_id),
+        )
+
+
 def create_user(username: str, password_hash: str, email: Optional[str]) -> dict[str, Any]:
     uid = str(uuid.uuid4())
     with get_db() as conn:
@@ -105,7 +177,65 @@ def create_user(username: str, password_hash: str, email: Optional[str]) -> dict
             "INSERT INTO users (id, username, password_hash, email, created_at) VALUES (?,?,?,?,?)",
             (uid, username, password_hash, email, _utc_now()),
         )
+        _ensure_default_project(conn, uid)
     return {"id": uid, "username": username, "email": email}
+
+
+def list_projects_for_user(user_id: str) -> list[dict[str, Any]]:
+    with get_db() as conn:
+        _ensure_default_project(conn, user_id)
+        rows = conn.execute(
+            "SELECT id, name, created_at FROM projects WHERE user_id = ? ORDER BY created_at DESC",
+            (user_id,),
+        ).fetchall()
+    return [{"id": r["id"], "name": r["name"], "createdAt": r["created_at"]} for r in rows]
+
+
+def get_project(project_id: str, user_id: str) -> Optional[sqlite3.Row]:
+    with get_db() as conn:
+        cur = conn.execute("SELECT * FROM projects WHERE id = ? AND user_id = ?", (project_id, user_id))
+        return cur.fetchone()
+
+
+def get_default_project(user_id: str) -> dict[str, Any]:
+    with get_db() as conn:
+        pid = _ensure_default_project(conn, user_id)
+        row = conn.execute(
+            "SELECT id, name, created_at FROM projects WHERE id = ?",
+            (pid,),
+        ).fetchone()
+    assert row is not None
+    return {"id": row["id"], "name": row["name"], "createdAt": row["created_at"]}
+
+
+def insert_project(user_id: str, name: str) -> dict[str, Any]:
+    pid = str(uuid.uuid4())
+    ts = _utc_now()
+    with get_db() as conn:
+        _ensure_default_project(conn, user_id)
+        conn.execute(
+            "INSERT INTO projects (id, user_id, name, is_default, created_at) VALUES (?, ?, ?, 0, ?)",
+            (pid, user_id, name.strip(), ts),
+        )
+    return {"id": pid, "name": name.strip(), "createdAt": ts}
+
+
+def rename_project(project_id: str, user_id: str, name: str) -> bool:
+    with get_db() as conn:
+        cur = conn.execute(
+            "UPDATE projects SET name = ? WHERE id = ? AND user_id = ?",
+            (name.strip(), project_id, user_id),
+        )
+        return cur.rowcount > 0
+
+
+def delete_project(project_id: str, user_id: str) -> bool:
+    with get_db() as conn:
+        cur = conn.execute(
+            "DELETE FROM projects WHERE id = ? AND user_id = ? AND is_default = 0",
+            (project_id, user_id),
+        )
+        return cur.rowcount > 0
 
 
 def get_user_by_username(username: str) -> Optional[sqlite3.Row]:
@@ -122,6 +252,7 @@ def get_user_by_id(user_id: str) -> Optional[sqlite3.Row]:
 
 def insert_dataset(
     user_id: str,
+    project_id: str,
     name: str,
     root_dir: str,
     image_count: int,
@@ -131,12 +262,13 @@ def insert_dataset(
     ts = _utc_now()
     with get_db() as conn:
         conn.execute(
-            """INSERT INTO datasets (id, user_id, name, root_dir, image_count, created_at)
-               VALUES (?,?,?,?,?,?)""",
-            (did, user_id, name, root_dir, image_count, ts),
+            """INSERT INTO datasets (id, user_id, project_id, name, root_dir, image_count, created_at)
+               VALUES (?,?,?,?,?,?,?)""",
+            (did, user_id, project_id, name, root_dir, image_count, ts),
         )
     return {
         "id": did,
+        "projectId": project_id,
         "name": name,
         "imageCount": image_count,
         "createdAt": ts,
@@ -144,16 +276,30 @@ def insert_dataset(
     }
 
 
-def list_datasets_for_user(user_id: str) -> list[dict[str, Any]]:
+def list_datasets_for_user(user_id: str, project_id: str | None = None) -> list[dict[str, Any]]:
     with get_db() as conn:
-        cur = conn.execute(
-            "SELECT id, name, image_count, created_at FROM datasets WHERE user_id = ? ORDER BY created_at DESC",
-            (user_id,),
-        )
+        _ensure_default_project(conn, user_id)
+        if project_id:
+            cur = conn.execute(
+                """SELECT id, project_id, name, image_count, created_at
+                   FROM datasets
+                   WHERE user_id = ? AND project_id = ?
+                   ORDER BY created_at DESC""",
+                (user_id, project_id),
+            )
+        else:
+            cur = conn.execute(
+                """SELECT id, project_id, name, image_count, created_at
+                   FROM datasets
+                   WHERE user_id = ?
+                   ORDER BY created_at DESC""",
+                (user_id,),
+            )
         rows = cur.fetchall()
     return [
         {
             "id": r["id"],
+            "projectId": r["project_id"],
             "name": r["name"],
             "imageCount": r["image_count"],
             "createdAt": r["created_at"],
@@ -162,33 +308,52 @@ def list_datasets_for_user(user_id: str) -> list[dict[str, Any]]:
     ]
 
 
-def get_dataset(dataset_id: str, user_id: str) -> Optional[sqlite3.Row]:
+def get_dataset(dataset_id: str, user_id: str, project_id: str | None = None) -> Optional[sqlite3.Row]:
     with get_db() as conn:
-        cur = conn.execute(
-            "SELECT * FROM datasets WHERE id = ? AND user_id = ?",
-            (dataset_id, user_id),
-        )
+        if project_id:
+            cur = conn.execute(
+                "SELECT * FROM datasets WHERE id = ? AND user_id = ? AND project_id = ?",
+                (dataset_id, user_id, project_id),
+            )
+        else:
+            cur = conn.execute(
+                "SELECT * FROM datasets WHERE id = ? AND user_id = ?",
+                (dataset_id, user_id),
+            )
         return cur.fetchone()
 
 
-def dataset_task_count(dataset_id: str, user_id: str) -> int:
+def dataset_task_count(dataset_id: str, user_id: str, project_id: str | None = None) -> int:
     with get_db() as conn:
-        cur = conn.execute(
-            "SELECT COUNT(1) AS cnt FROM tasks WHERE dataset_id = ? AND user_id = ?",
-            (dataset_id, user_id),
-        )
+        if project_id:
+            cur = conn.execute(
+                "SELECT COUNT(1) AS cnt FROM tasks WHERE dataset_id = ? AND user_id = ? AND project_id = ?",
+                (dataset_id, user_id, project_id),
+            )
+        else:
+            cur = conn.execute(
+                "SELECT COUNT(1) AS cnt FROM tasks WHERE dataset_id = ? AND user_id = ?",
+                (dataset_id, user_id),
+            )
         row = cur.fetchone()
         return int(row["cnt"]) if row is not None else 0
 
 
-def delete_dataset(dataset_id: str, user_id: str) -> bool:
+def delete_dataset(dataset_id: str, user_id: str, project_id: str | None = None) -> bool:
     with get_db() as conn:
-        cur = conn.execute("DELETE FROM datasets WHERE id = ? AND user_id = ?", (dataset_id, user_id))
+        if project_id:
+            cur = conn.execute(
+                "DELETE FROM datasets WHERE id = ? AND user_id = ? AND project_id = ?",
+                (dataset_id, user_id, project_id),
+            )
+        else:
+            cur = conn.execute("DELETE FROM datasets WHERE id = ? AND user_id = ?", (dataset_id, user_id))
         return cur.rowcount > 0
 
 
 def insert_task(
     user_id: str,
+    project_id: str,
     dataset_id: str,
     learning_rate: float,
     batch_size: int,
@@ -203,12 +368,13 @@ def insert_task(
     with get_db() as conn:
         conn.execute(
             """INSERT INTO tasks (
-                id, user_id, dataset_id, status, learning_rate, batch_size, epochs,
+                id, user_id, project_id, dataset_id, status, learning_rate, batch_size, epochs,
                 domain_augmentation, created_at, display_name, task_params_json, message
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 tid,
                 user_id,
+                project_id,
                 dataset_id,
                 "pending",
                 learning_rate,
@@ -277,22 +443,53 @@ def update_task_checkpoints(
 def get_task(task_id: str, user_id: str) -> Optional[sqlite3.Row]:
     with get_db() as conn:
         cur = conn.execute(
-            """SELECT t.*, d.name AS dataset_name FROM tasks t
+            """SELECT t.*, d.name AS dataset_name, p.name AS project_name FROM tasks t
                JOIN datasets d ON d.id = t.dataset_id
+               LEFT JOIN projects p ON p.id = t.project_id
                WHERE t.id = ? AND t.user_id = ?""",
             (task_id, user_id),
         )
         return cur.fetchone()
 
 
-def list_tasks_for_user(user_id: str) -> list[sqlite3.Row]:
+def list_tasks_for_user(user_id: str, project_id: str | None = None) -> list[sqlite3.Row]:
     with get_db() as conn:
-        cur = conn.execute(
-            """SELECT t.*, d.name AS dataset_name FROM tasks t
+        _ensure_default_project(conn, user_id)
+        if project_id:
+            cur = conn.execute(
+                """SELECT t.*, d.name AS dataset_name, p.name AS project_name FROM tasks t
+                   JOIN datasets d ON d.id = t.dataset_id
+                   LEFT JOIN projects p ON p.id = t.project_id
+                   WHERE t.user_id = ? AND t.project_id = ?
+                   ORDER BY t.created_at DESC""",
+                (user_id, project_id),
+            )
+        else:
+            cur = conn.execute(
+                """SELECT t.*, d.name AS dataset_name, p.name AS project_name FROM tasks t
                JOIN datasets d ON d.id = t.dataset_id
+               LEFT JOIN projects p ON p.id = t.project_id
                WHERE t.user_id = ?
                ORDER BY t.created_at DESC""",
-            (user_id,),
+                (user_id,),
+            )
+        return cur.fetchall()
+
+
+def list_tasks_for_project(user_id: str, project_id: str) -> list[sqlite3.Row]:
+    with get_db() as conn:
+        cur = conn.execute(
+            "SELECT * FROM tasks WHERE user_id = ? AND project_id = ? ORDER BY created_at DESC",
+            (user_id, project_id),
+        )
+        return cur.fetchall()
+
+
+def list_datasets_for_project(user_id: str, project_id: str) -> list[sqlite3.Row]:
+    with get_db() as conn:
+        cur = conn.execute(
+            "SELECT * FROM datasets WHERE user_id = ? AND project_id = ? ORDER BY created_at DESC",
+            (user_id, project_id),
         )
         return cur.fetchall()
 
@@ -319,6 +516,8 @@ def task_row_to_summary(row: sqlite3.Row) -> dict[str, Any]:
         "epochs": row["epochs"],
         "datasetId": row["dataset_id"],
         "datasetName": row["dataset_name"],
+        "projectId": row["project_id"],
+        "projectName": row["project_name"],
     }
     raw_params = row["task_params_json"] if "task_params_json" in row.keys() else None
     if raw_params:
@@ -330,6 +529,7 @@ def task_row_to_summary(row: sqlite3.Row) -> dict[str, Any]:
             pass
     return {
         "id": row["id"],
+        "projectId": row["project_id"],
         "name": _task_display_name(row),
         "status": row["status"],
         "created_at": row["created_at"],

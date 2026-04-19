@@ -1,0 +1,17 @@
+# 回归模型对比评测
+
+## 评测模型
+
+- `legacy`: `E:\桌面\项目\training_runs\generalization_real_data_20260418_115800\Net_regression_legacy_original\best_ve2_legacy_original_regression.pth` | preprocess=`hsv` / `120x160` / ROI=`False`
+- `mobilenet_v1`: `E:\桌面\项目\training_runs\generalization_real_data_20260418_115800\Net_regression\best_ve2_generalization_regression.pth` | preprocess=`hsv` / `120x160` / ROI=`False`
+- `mobilenet_v2`: `E:\桌面\项目\training_runs\debug_mobilenet_v2_smoke_20260418_02\best_ve2_debug_mobilenet_v2_smoke.pth` | preprocess=`hsv` / `144x192` / ROI=`False`
+
+## 汇总
+
+| dataset | kind | images | folders | legacy MAE | mobilenet_v1 MAE | mobilenet_v2 MAE | winner |
+|---|---|---|---|---|---|---|---|
+| smoke | flat | 5 |  | 0.050696 | 0.077593 | 0.029963 | mobilenet_v2 |
+
+## 结果文件
+
+- `smoke`: `{"name": "smoke", "kind": "flat", "folder": "E:\\桌面\\项目\\tmp_compare_smoke", "numImages": 5, "mae": {"legacy": 0.05069646835327148, "mobilenet_v1": 0.07759297788143157, "mobilenet_v2": 0.029963209852576257}, "json": "E:\\桌面\\项目\\training_runs\\debug_compare_smoke_20260418\\smoke\\regression_compare.json", "csv": "E:\\桌面\\项目\\training_runs\\debug_compare_smoke_20260418\\smoke\\regression_compare.csv", "angleCsv": "E:\\桌面\\项目\\training_runs\\debug_compare_smoke_20260418\\smoke\\regression_compare_by_angle.csv", "plot": "E:\\桌面\\项目\\training_runs\\debug_compare_smoke_20260418\\smoke\\regression_compare.png"}`

@@ -1,0 +1,153 @@
+{
+  "root": "E:\\桌面\\kunmingr2",
+  "outputDir": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2_new_cls_imp",
+  "numFolders": 10,
+  "testNumber": null,
+  "classCkpt": "E:\\桌面\\项目\\training_runs\\data_aug_20260418_002828\\Net_class\\best_ve2_data_aug_class.pth",
+  "improveCkpt": "E:\\桌面\\项目\\training_runs\\data_aug_20260418_002828\\Net_improve\\best_ve2_data_aug_improve.pth",
+  "regressionCkpt": "E:\\桌面\\项目\\training_runs\\real_data_20260417_213537\\Net_regression\\best_ve2_real_regression.pth",
+  "roiEnabled": true,
+  "roiBottomRatio": 0.6,
+  "records": [
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\1\\1",
+      "plot": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__1__1.png",
+      "json": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__1__1.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\1\\1\nrun_dir: E:\\����\\��Ŀ\\training_runs\\data_aug_20260418_002828\ndevice: cuda\ntested_images: 108\nroi_enabled: True\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__1__1.png\njson: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__1__1.json\n\nmodel           mae\n--------------- ------------\nNet_class           0.843456\nNet_improve         1.002407\nNet_regression      0.759021\n",
+      "stderr": "",
+      "mae": {
+        "Net_class": 0.843456371481637,
+        "Net_improve": 1.0024074074074074,
+        "Net_regression": 0.7590206983437141
+      },
+      "numImages": 108
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\1\\2",
+      "plot": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__1__2.png",
+      "json": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__1__2.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\1\\2\nrun_dir: E:\\����\\��Ŀ\\training_runs\\data_aug_20260418_002828\ndevice: cuda\ntested_images: 107\nroi_enabled: True\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__1__2.png\njson: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__1__2.json\n\nmodel           mae\n--------------- ------------\nNet_class           0.808059\nNet_improve         1.020748\nNet_regression      0.718377\n",
+      "stderr": "",
+      "mae": {
+        "Net_class": 0.8080588197847938,
+        "Net_improve": 1.020747663551402,
+        "Net_regression": 0.7183769772097328
+      },
+      "numImages": 107
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\1",
+      "plot": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__2__1.png",
+      "json": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__2__1.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\2\\1\nrun_dir: E:\\����\\��Ŀ\\training_runs\\data_aug_20260418_002828\ndevice: cuda\ntested_images: 91\nroi_enabled: True\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__2__1.png\njson: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__2__1.json\n\nmodel           mae\n--------------- ------------\nNet_class           0.590759\nNet_improve         0.448316\nNet_regression      0.336169\n",
+      "stderr": "",
+      "mae": {
+        "Net_class": 0.590758938536103,
+        "Net_improve": 0.4483164835164834,
+        "Net_regression": 0.3361693912629243
+      },
+      "numImages": 91
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2",
+      "plot": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__2__2.png",
+      "json": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__2__2.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\2\\2\nrun_dir: E:\\����\\��Ŀ\\training_runs\\data_aug_20260418_002828\ndevice: cuda\ntested_images: 91\nroi_enabled: True\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__2__2.png\njson: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__2__2.json\n\nmodel           mae\n--------------- ------------\nNet_class           0.768691\nNet_improve         0.393831\nNet_regression      0.398917\n",
+      "stderr": "",
+      "mae": {
+        "Net_class": 0.7686910780976204,
+        "Net_improve": 0.39383076923076915,
+        "Net_regression": 0.3989166929013127
+      },
+      "numImages": 91
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\1",
+      "plot": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__3__1.png",
+      "json": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__3__1.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\3\\1\nrun_dir: E:\\����\\��Ŀ\\training_runs\\data_aug_20260418_002828\ndevice: cuda\ntested_images: 161\nroi_enabled: True\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__3__1.png\njson: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__3__1.json\n\nmodel           mae\n--------------- ------------\nNet_class           0.636122\nNet_improve         0.552329\nNet_regression      0.325460\n",
+      "stderr": "",
+      "mae": {
+        "Net_class": 0.6361223145929608,
+        "Net_improve": 0.552329192546584,
+        "Net_regression": 0.3254603321219083
+      },
+      "numImages": 161
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2",
+      "plot": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__3__2.png",
+      "json": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__3__2.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\3\\2\nrun_dir: E:\\����\\��Ŀ\\training_runs\\data_aug_20260418_002828\ndevice: cuda\ntested_images: 159\nroi_enabled: True\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__3__2.png\njson: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__3__2.json\n\nmodel           mae\n--------------- ------------\nNet_class           0.630775\nNet_improve         0.629465\nNet_regression      0.549289\n",
+      "stderr": "",
+      "mae": {
+        "Net_class": 0.6307753740418965,
+        "Net_improve": 0.6294654088050315,
+        "Net_regression": 0.5492892153840395
+      },
+      "numImages": 159
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\4\\1",
+      "plot": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__4__1.png",
+      "json": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__4__1.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\4\\1\nrun_dir: E:\\����\\��Ŀ\\training_runs\\data_aug_20260418_002828\ndevice: cuda\ntested_images: 83\nroi_enabled: True\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__4__1.png\njson: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__4__1.json\n\nmodel           mae\n--------------- ------------\nNet_class           1.069122\nNet_improve         1.401495\nNet_regression      0.838261\n",
+      "stderr": "",
+      "mae": {
+        "Net_class": 1.0691218280287125,
+        "Net_improve": 1.4014951807228915,
+        "Net_regression": 0.8382614866118833
+      },
+      "numImages": 83
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\4\\2",
+      "plot": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__4__2.png",
+      "json": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__4__2.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\4\\2\nrun_dir: E:\\����\\��Ŀ\\training_runs\\data_aug_20260418_002828\ndevice: cuda\ntested_images: 83\nroi_enabled: True\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__4__2.png\njson: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__4__2.json\n\nmodel           mae\n--------------- ------------\nNet_class           1.159682\nNet_improve         1.290170\nNet_regression      0.875071\n",
+      "stderr": "",
+      "mae": {
+        "Net_class": 1.1596816817487001,
+        "Net_improve": 1.2901698795180723,
+        "Net_regression": 0.8750713412916803
+      },
+      "numImages": 83
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\5\\1",
+      "plot": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__5__1.png",
+      "json": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__5__1.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\5\\1\nrun_dir: E:\\����\\��Ŀ\\training_runs\\data_aug_20260418_002828\ndevice: cuda\ntested_images: 97\nroi_enabled: True\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__5__1.png\njson: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__5__1.json\n\nmodel           mae\n--------------- ------------\nNet_class           1.128511\nNet_improve         0.426505\nNet_regression      1.089571\n",
+      "stderr": "",
+      "mae": {
+        "Net_class": 1.128511060404668,
+        "Net_improve": 0.4265051546391752,
+        "Net_regression": 1.0895713632229675
+      },
+      "numImages": 97
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\5\\2",
+      "plot": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__5__2.png",
+      "json": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__5__2.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\5\\2\nrun_dir: E:\\����\\��Ŀ\\training_runs\\data_aug_20260418_002828\ndevice: cuda\ntested_images: 98\nroi_enabled: True\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__5__2.png\njson: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2_new_cls_imp\\kunmingr2__5__2.json\n\nmodel           mae\n--------------- ------------\nNet_class           1.028546\nNet_improve         0.390061\nNet_regression      1.061936\n",
+      "stderr": "",
+      "mae": {
+        "Net_class": 1.0285463606416199,
+        "Net_improve": 0.3900612244897959,
+        "Net_regression": 1.0619363744715038
+      },
+      "numImages": 98
+    }
+  ]
+}

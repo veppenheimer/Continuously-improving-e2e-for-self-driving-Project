@@ -1,0 +1,15 @@
+{
+  "requestedEpochs": 100,
+  "completedEpochs": 100,
+  "bestEpoch": 95,
+  "stoppedEpoch": null,
+  "earlyStopped": false,
+  "finalTrainLoss": 0.041843719972959784,
+  "finalValLoss": 0.06613534121146118,
+  "steeringError": 0.06404695280923925,
+  "finalTrainMAE": 0.07684197297594586,
+  "finalValMAE": 0.0753075791116076,
+  "finalTestLoss": 0.07568484107530071,
+  "finalTestMAE": 0.08835434142983596,
+  "usedDedicatedTestSplit": true
+}

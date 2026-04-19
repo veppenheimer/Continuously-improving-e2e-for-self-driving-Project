@@ -1,18 +1,27 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8 -*-
+﻿#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
+from __future__ import annotations
 
-# 导入系统库
+import sys
+from pathlib import Path
+
+CURRENT_DIR = Path(__file__).resolve().parent
+REPO_ROOT = CURRENT_DIR.parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 import os
-import numpy as np
-import cv2
-from PIL import Image  # 添加这一行
+from typing import Any
 
-# 导入PyTorch库
+import cv2
+import numpy as np
 import torch
+from PIL import Image
 from torch.utils.data import Dataset
 
-from steering_config import angle_to_class
+from steering_config import angle_to_class_and_delta
+from steering_preprocess import NumpyRandomState
 
 
 def _imread_bgr(path: str):
@@ -23,63 +32,64 @@ def _imread_bgr(path: str):
     return cv2.imdecode(buf, cv2.IMREAD_COLOR)
 
 
+def _is_albumentations_transform(transform: Any) -> bool:
+    return hasattr(transform, "__call__") and transform.__class__.__module__.startswith("albumentations")
+
+
 class AutoDriveDataset(Dataset):
-    """
-    数据集加载器（标签为 0..NUM_CLASSES-1 的类别索引）
-    """
-
-    def __init__(self, data_folder, mode, transform=None):
-        """
-        :参数 data_folder: # 数据文件所在文件夹根路径(train.txt和val.txt所在文件夹路径)
-        :参数 mode: 'train' 或者 'val'
-        :参数 transform: 图像变换
-        """
-
+    def __init__(self, data_folder, mode, transform=None, deterministic_seed: int | None = None):
         self.data_folder = data_folder
         self.mode = mode.lower()
         self.transform = transform
+        self.deterministic_seed = deterministic_seed
+        assert self.mode in {"train", "val", "test"}
 
-        assert self.mode in {'train', 'val'}
-
-        # 读取图像列表路径
-        if self.mode == 'train':
-            file_path = os.path.join(data_folder, 'train.txt')
-        else:
-            file_path = os.path.join(data_folder, 'val.txt')
-
-        self.file_list = list()
-        with open(file_path, 'r', encoding="utf-8") as f:
-            files = f.readlines()
-            for file in files:
-                if not file.strip():
+        file_path = os.path.join(data_folder, f"{self.mode}.txt")
+        self.file_list = []
+        self.class_indices = []
+        self.raw_angles = []
+        with open(file_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
                     continue
-                img_path, angle_str = file.strip().rsplit(" ", 1)
-                angle = float(angle_str)
-                cls = angle_to_class(angle)
-                self.file_list.append([img_path, cls])
+                img_path, angle_str = line.rsplit(" ", 1)
+                raw_angle = float(angle_str)
+                cls, delta = angle_to_class_and_delta(raw_angle)
+                self.file_list.append((img_path, cls, raw_angle, delta))
+                self.class_indices.append(cls)
+                self.raw_angles.append(raw_angle)
+
+    def _apply_transform(self, img_bgr: np.ndarray, idx: int):
+        if self.transform is None:
+            img_hsv = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2HSV)
+            img_hsv = img_hsv.astype(np.float32) / 255.0
+            return torch.from_numpy(np.transpose(img_hsv, (2, 0, 1))).float()
+
+        if _is_albumentations_transform(self.transform):
+            img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+            if self.deterministic_seed is not None:
+                with NumpyRandomState(self.deterministic_seed + idx):
+                    return self.transform(image=img_rgb)["image"]
+            return self.transform(image=img_rgb)["image"]
+
+        img_hsv = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2HSV)
+        img_pil = Image.fromarray(img_hsv)
+        return self.transform(img_pil)
 
     def __getitem__(self, i):
-        """
-        :参数 i: 图像检索号
-        :返回: 返回第i个图像和类别标签（long）
-        """
-        # 读取图像
-        img = _imread_bgr(self.file_list[i][0])
+        img_path, class_idx, raw_angle, delta_target = self.file_list[i]
+        img = _imread_bgr(img_path)
         if img is None:
-            raise FileNotFoundError(f"无法读取图像: {self.file_list[i][0]}")
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-
-        img = Image.fromarray(img)
-
-        if self.transform:
-            img = self.transform(img)
-        label = self.file_list[i][1]
-        label = torch.tensor(label, dtype=torch.long)
-        return img, label
+            raise FileNotFoundError(f"无法读取图像: {img_path}")
+        img = self._apply_transform(img, i)
+        return (
+            img,
+            torch.tensor(class_idx, dtype=torch.long),
+            torch.tensor(raw_angle, dtype=torch.float32),
+            torch.tensor(delta_target, dtype=torch.float32),
+        )
 
     def __len__(self):
-        """
-        为了使用PyTorch的DataLoader,必须提供该方法.
-        :返回: 加载的图像总数
-        """
         return len(self.file_list)
+

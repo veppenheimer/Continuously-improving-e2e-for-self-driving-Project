@@ -1,0 +1,153 @@
+{
+  "root": "E:\\桌面\\kunmingr2",
+  "outputDir": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2",
+  "numFolders": 10,
+  "testNumber": null,
+  "classCkpt": null,
+  "improveCkpt": null,
+  "regressionCkpt": null,
+  "roiEnabled": false,
+  "roiBottomRatio": null,
+  "records": [
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\1\\1",
+      "plot": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__1__1.png",
+      "json": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__1__1.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\1\\1\nrun_dir: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\ndevice: cuda\ntested_images: 108\nroi_enabled: False\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__1__1.png\njson: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__1__1.json\ncsv: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__1__1.csv\nby_angle_csv: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__1__1_by_angle.csv\n\nmodel           mae\n--------------- ------------\nNet_class           1.613143\nNet_improve         1.520926\nNet_regression      1.104633\n",
+      "stderr": "E:\\����\\��Ŀ\\scripts\\joint_infer_dataset_compare.py:215: MatplotlibDeprecationWarning: The 'labels' parameter of boxplot() has been renamed 'tick_labels' since Matplotlib 3.9; support for the old name will be dropped in 3.11.\n  ax.boxplot([abs_errors[name] for name in model_names], labels=model_names, showfliers=False)\n",
+      "mae": {
+        "Net_class": 1.613142939481,
+        "Net_improve": 1.5209259259259258,
+        "Net_regression": 1.1046330212001447
+      },
+      "numImages": 108
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\1\\2",
+      "plot": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__1__2.png",
+      "json": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__1__2.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\1\\2\nrun_dir: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\ndevice: cuda\ntested_images: 107\nroi_enabled: False\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__1__2.png\njson: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__1__2.json\ncsv: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__1__2.csv\nby_angle_csv: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__1__2_by_angle.csv\n\nmodel           mae\n--------------- ------------\nNet_class           1.587526\nNet_improve         1.430093\nNet_regression      1.125279\n",
+      "stderr": "E:\\����\\��Ŀ\\scripts\\joint_infer_dataset_compare.py:215: MatplotlibDeprecationWarning: The 'labels' parameter of boxplot() has been renamed 'tick_labels' since Matplotlib 3.9; support for the old name will be dropped in 3.11.\n  ax.boxplot([abs_errors[name] for name in model_names], labels=model_names, showfliers=False)\n",
+      "mae": {
+        "Net_class": 1.5875263804091233,
+        "Net_improve": 1.430093457943925,
+        "Net_regression": 1.1252787399598372
+      },
+      "numImages": 107
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\1",
+      "plot": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__2__1.png",
+      "json": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__2__1.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\2\\1\nrun_dir: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\ndevice: cuda\ntested_images: 91\nroi_enabled: False\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__2__1.png\njson: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__2__1.json\ncsv: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__2__1.csv\nby_angle_csv: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__2__1_by_angle.csv\n\nmodel           mae\n--------------- ------------\nNet_class           2.182057\nNet_improve         1.766960\nNet_regression      0.873494\n",
+      "stderr": "E:\\����\\��Ŀ\\scripts\\joint_infer_dataset_compare.py:215: MatplotlibDeprecationWarning: The 'labels' parameter of boxplot() has been renamed 'tick_labels' since Matplotlib 3.9; support for the old name will be dropped in 3.11.\n  ax.boxplot([abs_errors[name] for name in model_names], labels=model_names, showfliers=False)\n",
+      "mae": {
+        "Net_class": 2.1820569230637066,
+        "Net_improve": 1.7669604395604395,
+        "Net_regression": 0.8734944022831025
+      },
+      "numImages": 91
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2",
+      "plot": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__2__2.png",
+      "json": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__2__2.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\2\\2\nrun_dir: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\ndevice: cuda\ntested_images: 91\nroi_enabled: False\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__2__2.png\njson: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__2__2.json\ncsv: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__2__2.csv\nby_angle_csv: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__2__2_by_angle.csv\n\nmodel           mae\n--------------- ------------\nNet_class           2.118666\nNet_improve         1.967134\nNet_regression      0.787831\n",
+      "stderr": "E:\\����\\��Ŀ\\scripts\\joint_infer_dataset_compare.py:215: MatplotlibDeprecationWarning: The 'labels' parameter of boxplot() has been renamed 'tick_labels' since Matplotlib 3.9; support for the old name will be dropped in 3.11.\n  ax.boxplot([abs_errors[name] for name in model_names], labels=model_names, showfliers=False)\n",
+      "mae": {
+        "Net_class": 2.118665630414373,
+        "Net_improve": 1.967134065934066,
+        "Net_regression": 0.7878306591878881
+      },
+      "numImages": 91
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\1",
+      "plot": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__3__1.png",
+      "json": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__3__1.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\3\\1\nrun_dir: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\ndevice: cuda\ntested_images: 161\nroi_enabled: False\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__3__1.png\njson: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__3__1.json\ncsv: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__3__1.csv\nby_angle_csv: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__3__1_by_angle.csv\n\nmodel           mae\n--------------- ------------\nNet_class           0.398798\nNet_improve         0.543161\nNet_regression      0.442590\n",
+      "stderr": "E:\\����\\��Ŀ\\scripts\\joint_infer_dataset_compare.py:215: MatplotlibDeprecationWarning: The 'labels' parameter of boxplot() has been renamed 'tick_labels' since Matplotlib 3.9; support for the old name will be dropped in 3.11.\n  ax.boxplot([abs_errors[name] for name in model_names], labels=model_names, showfliers=False)\n",
+      "mae": {
+        "Net_class": 0.39879848441943416,
+        "Net_improve": 0.5431614906832299,
+        "Net_regression": 0.44259012516166857
+      },
+      "numImages": 161
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2",
+      "plot": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__3__2.png",
+      "json": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__3__2.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\3\\2\nrun_dir: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\ndevice: cuda\ntested_images: 159\nroi_enabled: False\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__3__2.png\njson: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__3__2.json\ncsv: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__3__2.csv\nby_angle_csv: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__3__2_by_angle.csv\n\nmodel           mae\n--------------- ------------\nNet_class           0.554255\nNet_improve         0.826786\nNet_regression      0.535948\n",
+      "stderr": "E:\\����\\��Ŀ\\scripts\\joint_infer_dataset_compare.py:215: MatplotlibDeprecationWarning: The 'labels' parameter of boxplot() has been renamed 'tick_labels' since Matplotlib 3.9; support for the old name will be dropped in 3.11.\n  ax.boxplot([abs_errors[name] for name in model_names], labels=model_names, showfliers=False)\n",
+      "mae": {
+        "Net_class": 0.5542551560746696,
+        "Net_improve": 0.8267861635220126,
+        "Net_regression": 0.5359476116573285
+      },
+      "numImages": 159
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\4\\1",
+      "plot": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__4__1.png",
+      "json": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__4__1.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\4\\1\nrun_dir: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\ndevice: cuda\ntested_images: 83\nroi_enabled: False\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__4__1.png\njson: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__4__1.json\ncsv: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__4__1.csv\nby_angle_csv: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__4__1_by_angle.csv\n\nmodel           mae\n--------------- ------------\nNet_class           1.255420\nNet_improve         1.149206\nNet_regression      0.711008\n",
+      "stderr": "E:\\����\\��Ŀ\\scripts\\joint_infer_dataset_compare.py:215: MatplotlibDeprecationWarning: The 'labels' parameter of boxplot() has been renamed 'tick_labels' since Matplotlib 3.9; support for the old name will be dropped in 3.11.\n  ax.boxplot([abs_errors[name] for name in model_names], labels=model_names, showfliers=False)\n",
+      "mae": {
+        "Net_class": 1.2554203119739524,
+        "Net_improve": 1.1492060240963855,
+        "Net_regression": 0.7110080277205949
+      },
+      "numImages": 83
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\4\\2",
+      "plot": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__4__2.png",
+      "json": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__4__2.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\4\\2\nrun_dir: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\ndevice: cuda\ntested_images: 83\nroi_enabled: False\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__4__2.png\njson: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__4__2.json\ncsv: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__4__2.csv\nby_angle_csv: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__4__2_by_angle.csv\n\nmodel           mae\n--------------- ------------\nNet_class           1.427633\nNet_improve         1.281495\nNet_regression      0.745514\n",
+      "stderr": "E:\\����\\��Ŀ\\scripts\\joint_infer_dataset_compare.py:215: MatplotlibDeprecationWarning: The 'labels' parameter of boxplot() has been renamed 'tick_labels' since Matplotlib 3.9; support for the old name will be dropped in 3.11.\n  ax.boxplot([abs_errors[name] for name in model_names], labels=model_names, showfliers=False)\n",
+      "mae": {
+        "Net_class": 1.4276327751068005,
+        "Net_improve": 1.2814951807228918,
+        "Net_regression": 0.745513630973
+      },
+      "numImages": 83
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\5\\1",
+      "plot": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__5__1.png",
+      "json": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__5__1.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\5\\1\nrun_dir: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\ndevice: cuda\ntested_images: 97\nroi_enabled: False\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__5__1.png\njson: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__5__1.json\ncsv: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__5__1.csv\nby_angle_csv: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__5__1_by_angle.csv\n\nmodel           mae\n--------------- ------------\nNet_class           1.045352\nNet_improve         0.909268\nNet_regression      0.632224\n",
+      "stderr": "E:\\����\\��Ŀ\\scripts\\joint_infer_dataset_compare.py:215: MatplotlibDeprecationWarning: The 'labels' parameter of boxplot() has been renamed 'tick_labels' since Matplotlib 3.9; support for the old name will be dropped in 3.11.\n  ax.boxplot([abs_errors[name] for name in model_names], labels=model_names, showfliers=False)\n",
+      "mae": {
+        "Net_class": 1.0453523560438358,
+        "Net_improve": 0.9092680412371136,
+        "Net_regression": 0.632223815865738
+      },
+      "numImages": 97
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\5\\2",
+      "plot": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__5__2.png",
+      "json": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__5__2.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\5\\2\nrun_dir: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\ndevice: cuda\ntested_images: 98\nroi_enabled: False\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__5__2.png\njson: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__5__2.json\ncsv: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__5__2.csv\nby_angle_csv: E:\\����\\��Ŀ\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\kunmingr2__5__2_by_angle.csv\n\nmodel           mae\n--------------- ------------\nNet_class           1.161210\nNet_improve         1.024592\nNet_regression      0.689321\n",
+      "stderr": "E:\\����\\��Ŀ\\scripts\\joint_infer_dataset_compare.py:215: MatplotlibDeprecationWarning: The 'labels' parameter of boxplot() has been renamed 'tick_labels' since Matplotlib 3.9; support for the old name will be dropped in 3.11.\n  ax.boxplot([abs_errors[name] for name in model_names], labels=model_names, showfliers=False)\n",
+      "mae": {
+        "Net_class": 1.1612096456513832,
+        "Net_improve": 1.024591836734694,
+        "Net_regression": 0.6893206433872787
+      },
+      "numImages": 98
+    }
+  ]
+}

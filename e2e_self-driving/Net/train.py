@@ -1,139 +1,720 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8 -*-
+﻿#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-# 导入torch库
-import torch.backends.cudnn as cudnn
+from __future__ import annotations
+
+import copy
+import json
+import os
+import re
+from pathlib import Path
+from typing import Any
+
 import torch
+import torch.backends.cudnn as cudnn
+import torch.nn.functional as F
 from torch import nn
-import torchvision.transforms as transforms
 from torch.utils.tensorboard import SummaryWriter
 
-# 导入自定义库
-from models import AutoDriveNet
+from augmentations import AugConfig, build_eval_transforms, build_stress_transforms, build_train_transform_bundle
 from datasets import AutoDriveDataset
-from utils import *
+from models import AutoDriveLegacyNet, AutoDriveNet, AutoDriveNetTemporal, AutoDriveNetV1, build_model_for_checkpoint
+from sampler_utils import SamplerConfig, build_weighted_sampler, compute_sample_weights
+from steering_preprocess import (
+    PreprocessConfig,
+    build_angle_vocab,
+    preprocess_config_from_dict,
+    preprocess_config_to_dict,
+    soft_encode_angles_to_vocab,
+)
+from utils import AverageMeter
+
+
+def _env_bool(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
+def _env_float_tuple(name: str, default: tuple[float, ...]) -> tuple[float, ...]:
+    value = os.getenv(name)
+    if not value:
+        return default
+    parts = [item.strip() for item in value.split(",") if item.strip()]
+    if len(parts) != len(default):
+        return default
+    return tuple(float(item) for item in parts)
+
+
+def _unwrap(model: nn.Module) -> nn.Module:
+    return model.module if hasattr(model, "module") else model
+
+
+def _count_trainable_params(model: nn.Module) -> int:
+    return sum(parameter.numel() for parameter in model.parameters() if parameter.requires_grad)
+
+
+class ModelEMA:
+    def __init__(self, model: nn.Module, decay: float):
+        self.decay = float(decay)
+        self.ema_model = copy.deepcopy(_unwrap(model)).eval()
+        for parameter in self.ema_model.parameters():
+            parameter.requires_grad_(False)
+
+    @torch.no_grad()
+    def update(self, model: nn.Module) -> None:
+        src = _unwrap(model)
+        for ema_value, value in zip(self.ema_model.state_dict().values(), src.state_dict().values()):
+            if not torch.is_floating_point(ema_value):
+                ema_value.copy_(value)
+            else:
+                ema_value.mul_(self.decay).add_(value, alpha=1.0 - self.decay)
+
+    def state_dict(self) -> dict[str, torch.Tensor]:
+        return {key: value.detach().cpu() for key, value in self.ema_model.state_dict().items()}
+
+    def load_state_dict(self, state_dict: dict[str, torch.Tensor]) -> None:
+        self.ema_model.load_state_dict(state_dict, strict=True)
+
+
+class SoftTargetCrossEntropy(nn.Module):
+    def forward(self, logits: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        log_probs = F.log_softmax(logits, dim=1)
+        return -(target * log_probs).sum(dim=1).mean()
+
+
+def _configure_optimizer(base_model: nn.Module, *, lr: float, weight_decay: float, backbone_lr_factor: float, freeze_backbone: bool):
+    if not hasattr(base_model, "set_backbone_trainable"):
+        optimizer = torch.optim.AdamW(base_model.parameters(), lr=lr, weight_decay=weight_decay)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer,
+            mode="min",
+            factor=0.5,
+            patience=max(2, int(os.getenv("VENET_LR_PATIENCE", "4"))),
+            min_lr=1e-6,
+        )
+        return optimizer, scheduler
+
+    base_model.set_backbone_trainable(not freeze_backbone)
+    if freeze_backbone:
+        optimizer = torch.optim.AdamW(base_model.head_parameters(), lr=lr, weight_decay=weight_decay)
+    else:
+        optimizer = torch.optim.AdamW(
+            [
+                {"params": list(base_model.head_parameters()), "lr": lr},
+                {"params": list(base_model.backbone_parameters()), "lr": lr * backbone_lr_factor},
+            ],
+            weight_decay=weight_decay,
+        )
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer,
+        mode="min",
+        factor=0.5,
+        patience=max(2, int(os.getenv("VENET_LR_PATIENCE", "4"))),
+        min_lr=1e-6,
+    )
+    return optimizer, scheduler
+
+
+def _extract_batch(batch):
+    if len(batch) == 3:
+        imgs, labels, meta = batch
+    else:
+        imgs, labels = batch
+        meta = {}
+    return imgs, labels, meta
+
+
+def _forward_model(model: nn.Module, imgs: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor | None]:
+    try:
+        pred, aux_logits = model(imgs, return_aux=True)
+    except TypeError:
+        pred = model(imgs)
+        aux_logits = None
+    return pred, aux_logits
+
+
+def _load_teacher_model(teacher_ckpt: Path, device: torch.device) -> tuple[nn.Module, PreprocessConfig]:
+    ckpt = torch.load(str(teacher_ckpt), map_location=device)
+    state = ckpt.get("model", ckpt) if isinstance(ckpt, dict) else ckpt
+    teacher_model = build_model_for_checkpoint(state).to(device)
+    teacher_model.eval()
+    preprocess = preprocess_config_from_dict(ckpt.get("preprocess") if isinstance(ckpt, dict) else None)
+    for parameter in teacher_model.parameters():
+        parameter.requires_grad_(False)
+    return teacher_model, preprocess
+
+
+def _run_epoch(
+    *,
+    model: nn.Module,
+    loader,
+    device: torch.device,
+    reg_criterion: nn.Module,
+    aux_criterion: nn.Module,
+    angle_vocab: list[float],
+    aux_cls_weight: float,
+    soft_label_temperature: float,
+    soft_label_neighbors: int,
+    teacher_model: nn.Module | None = None,
+    teacher_weight: float = 0.0,
+    optimizer=None,
+    grad_clip: float = 0.0,
+    ema: ModelEMA | None = None,
+):
+    is_train = optimizer is not None
+    model.train(is_train)
+
+    total_meter = AverageMeter("TotalLoss")
+    reg_meter = AverageMeter("RegLoss")
+    aux_meter = AverageMeter("AuxLoss")
+    distill_meter = AverageMeter("DistillLoss")
+    mae_meter = AverageMeter("MAE")
+
+    for batch in loader:
+        imgs, labels, meta = _extract_batch(batch)
+        imgs = imgs.to(device, non_blocking=True)
+        labels = labels.to(device, non_blocking=True)
+        soft_aux_targets = soft_encode_angles_to_vocab(
+            labels.view(-1),
+            angle_vocab,
+            device=device,
+            temperature=soft_label_temperature,
+            neighbor_count=soft_label_neighbors,
+        )
+
+        with torch.set_grad_enabled(is_train):
+            angle_pred, aux_logits = _forward_model(model, imgs)
+            reg_loss = reg_criterion(angle_pred, labels)
+            aux_loss = aux_criterion(aux_logits, soft_aux_targets) if aux_logits is not None else reg_loss.new_tensor(0.0)
+            distill_loss = reg_loss.new_tensor(0.0)
+
+            if teacher_model is not None and teacher_weight > 0 and isinstance(meta, dict) and "teacherImage" in meta and "isClean" in meta:
+                clean_mask = meta["isClean"].to(device=device, dtype=torch.bool)
+                if clean_mask.any():
+                    teacher_imgs = meta["teacherImage"].to(device, non_blocking=True)[clean_mask]
+                    with torch.no_grad():
+                        teacher_pred = teacher_model(teacher_imgs)
+                    distill_loss = reg_criterion(angle_pred[clean_mask], teacher_pred.detach())
+
+            total_loss = reg_loss + aux_cls_weight * aux_loss + teacher_weight * distill_loss
+            if is_train:
+                optimizer.zero_grad(set_to_none=True)
+                total_loss.backward()
+                if grad_clip > 0:
+                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=grad_clip)
+                optimizer.step()
+                if ema is not None:
+                    ema.update(model)
+
+        mae = (angle_pred - labels).abs().mean().item()
+        batch_size = imgs.size(0)
+        total_meter.update(total_loss.item(), batch_size)
+        reg_meter.update(reg_loss.item(), batch_size)
+        aux_meter.update(aux_loss.item(), batch_size)
+        distill_meter.update(distill_loss.item(), batch_size)
+        mae_meter.update(mae, batch_size)
+
+    return {
+        "total_loss": total_meter.avg,
+        "reg_loss": reg_meter.avg,
+        "aux_loss": aux_meter.avg,
+        "distill_loss": distill_meter.avg,
+        "mae": mae_meter.avg,
+    }
+
+
+def _write_summary(summary_path: Path, summary: dict):
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _load_dataset_summary(data_folder: str) -> dict[str, Any]:
+    summary_path = Path(data_folder) / "dataset_summary.json"
+    if not summary_path.is_file():
+        return {}
+    try:
+        return json.loads(summary_path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _build_aug_config(*, num_frames: int = 1) -> AugConfig:
+    preprocess = PreprocessConfig(
+        color_space=os.getenv("VENET_PREPROCESS_COLOR_SPACE", "hsv").strip().lower(),
+        input_size=(
+            int(os.getenv("VENET_INPUT_HEIGHT", "144")),
+            int(os.getenv("VENET_INPUT_WIDTH", "192")),
+        ),
+        use_roi=False,
+    )
+    return AugConfig(
+        preprocess=preprocess,
+        style_mix_ratio=_env_float_tuple("VENET_STYLE_MIX_RATIO", (0.6, 0.25, 0.15)),
+        num_frames=num_frames,
+    )
+
+
+def _build_sampler_config(train_size: int) -> SamplerConfig:
+    return SamplerConfig(
+        bin_mode=os.getenv("VENET_SAMPLER_BIN_MODE", "uniform").strip().lower(),
+        num_bins=int(os.getenv("VENET_SAMPLER_NUM_BINS", "9")),
+        use_abs_angle=_env_bool("VENET_SAMPLER_USE_ABS_ANGLE", True),
+        smoothing=float(os.getenv("VENET_SAMPLER_SMOOTHING", "1.0")),
+        max_weight=float(os.getenv("VENET_SAMPLER_MAX_WEIGHT", "8.0")),
+        downweight_straight=_env_bool("VENET_SAMPLER_DOWNWEIGHT_STRAIGHT", True),
+        straight_threshold=float(os.getenv("VENET_SAMPLER_STRAIGHT_THRESHOLD", "0.08")),
+        straight_weight_scale=float(os.getenv("VENET_SAMPLER_STRAIGHT_WEIGHT_SCALE", "0.45")),
+        replacement=_env_bool("VENET_SAMPLER_REPLACEMENT", True),
+        num_samples=int(os.getenv("VENET_SAMPLER_NUM_SAMPLES", str(train_size))),
+    )
+
+
+def _resolve_num_frames(model_variant: str) -> int:
+    explicit = os.getenv("VENET_NUM_FRAMES")
+    if explicit:
+        return max(1, int(explicit))
+    match = re.search(r"temporal(\d+)", model_variant)
+    if match:
+        return max(2, int(match.group(1)))
+    if "temporal" in model_variant:
+        return 3
+    return 1
+
+
+def _make_checkpoint_payload(
+    *,
+    epoch: int,
+    best_epoch: int,
+    best_metric: float,
+    angle_vocab: list[float],
+    preprocess: PreprocessConfig,
+    model_variant: str,
+    base_model: nn.Module,
+    ema: ModelEMA,
+    num_frames: int,
+    frame_stride: int,
+) -> dict[str, Any]:
+    return {
+        "epoch": epoch,
+        "model": ema.state_dict(),
+        "modelRaw": {key: value.detach().cpu() for key, value in base_model.state_dict().items()},
+        "emaState": ema.state_dict(),
+        "bestEpoch": best_epoch,
+        "bestSelectionMetric": best_metric,
+        "angleVocab": angle_vocab,
+        "modelVariant": model_variant,
+        "preprocess": preprocess_config_to_dict(preprocess),
+        "pretrainedLoaded": bool(getattr(base_model, "pretrained_loaded", False)),
+        "numFrames": int(num_frames),
+        "frameStride": int(frame_stride),
+    }
 
 
 def main():
-    """
-    训练.
-    """
-    # 数据集路径
-    data_folder = 'data/simulate/data'
+    data_folder = os.getenv("VENET_DATA_FOLDER", "data/simulate/data")
+    dataset_summary = _load_dataset_summary(data_folder)
+    checkpoint = os.getenv("VENET_CHECKPOINT", "") or None
+    teacher_ckpt = os.getenv("VENET_TEACHER_CKPT", "") or None
+    batch_size = int(os.getenv("VENET_BATCH_SIZE", "16"))
+    start_epoch = 1
+    epochs = int(os.getenv("VENET_EPOCHS", "80"))
+    lr = float(os.getenv("VENET_LR", "1e-4"))
+    weight_decay = float(os.getenv("VENET_WEIGHT_DECAY", "1e-4"))
+    grad_clip = float(os.getenv("VENET_GRAD_CLIP", "3.0"))
+    early_stop_patience = int(os.getenv("VENET_EARLY_STOP_PATIENCE", "10"))
+    early_stop_min_delta = float(os.getenv("VENET_EARLY_STOP_MIN_DELTA", "1e-4"))
+    enable_train_aug = not _env_bool("VENET_DISABLE_TRAIN_AUG", False)
+    use_weighted_sampler = _env_bool("VENET_USE_WEIGHTED_SAMPLER", True)
+    use_pretrained = _env_bool("VENET_USE_PRETRAINED", True)
+    model_variant = os.getenv("VENET_MODEL_VARIANT", "mobilenet_v2").strip().lower()
+    num_frames = _resolve_num_frames(model_variant)
+    frame_stride = int(os.getenv("VENET_FRAME_STRIDE", "1"))
+    freeze_backbone_epochs = int(os.getenv("VENET_FREEZE_BACKBONE_EPOCHS", "3"))
+    backbone_lr_factor = float(os.getenv("VENET_BACKBONE_LR_FACTOR", "0.2"))
+    aux_cls_weight = float(os.getenv("VENET_AUX_CLS_WEIGHT", "0.15"))
+    teacher_weight = float(os.getenv("VENET_TEACHER_WEIGHT", "0.20"))
+    soft_label_temperature = float(os.getenv("VENET_SOFT_LABEL_TEMPERATURE", "0.03"))
+    soft_label_neighbors = int(os.getenv("VENET_SOFT_LABEL_NEIGHBORS", "3"))
+    ema_decay = float(os.getenv("VENET_EMA_DECAY", "0.999"))
+    log_dir = os.getenv("VENET_LOG_DIR", "")
 
-    # 学习参数
-    checkpoint = None  # 预训练模型路径，如果不存在则为None
-    batch_size = 32  # 批大小
-    start_epoch = 1  # 轮数起始位置
-    epochs = 100                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             # 迭代轮数
-    lr = 1e-4  # 学习率
+    output_dir = Path(os.getenv("VENET_OUTPUT_DIR", "."))
+    save_name = os.getenv("VENET_SAVE_NAME", "ve2.pth")
+    best_save_name = os.getenv("VENET_BEST_SAVE_NAME", f"best_{save_name}")
 
-    # 设备参数
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if torch.cuda.is_available():
-        print("使用 GPU:", torch.cuda.get_device_name(0))
+        print("Using GPU:", torch.cuda.get_device_name(0))
     else:
-        print("当前使用 CPU")
-    ngpu = 1  # 用来运行的gpu数量
-    cudnn.benchmark = True  # 对卷积进行加速
-    writer = SummaryWriter()  # 实时监控     使用命令 tensorboard --logdir runs  进行查看
+        print("Using CPU")
 
-    # 初始化模型
-    model = AutoDriveNet()
+    cudnn.benchmark = True
+    writer = SummaryWriter(log_dir=log_dir if log_dir else None)
 
+    aug_config = _build_aug_config(num_frames=num_frames)
+    train_transform = build_train_transform_bundle(aug_config) if enable_train_aug else build_eval_transforms(aug_config)
+    eval_transform = build_eval_transforms(aug_config)
+    stress_transform = build_stress_transforms(aug_config)
 
-    # 初始化优化器
-    optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad,
-                                               model.parameters()),
-                                 lr=lr)
+    teacher_model = None
+    teacher_preprocess = None
+    if teacher_ckpt:
+        teacher_path = Path(teacher_ckpt).expanduser().resolve()
+        if teacher_path.is_file():
+            teacher_model, teacher_preprocess = _load_teacher_model(teacher_path, device)
+            print(f"TeacherConfig enabled=1 ckpt={teacher_path} preprocess={preprocess_config_to_dict(teacher_preprocess)}")
+        else:
+            print(f"TeacherConfig enabled=0 missing_ckpt={teacher_path}")
+            teacher_weight = 0.0
+    else:
+        teacher_weight = 0.0
+        print("TeacherConfig enabled=0")
 
-    # 迁移至默认设备进行训练
-    model = model.to(device)
-    criterion = nn.MSELoss().to(device)
+    dataset_kwargs = {"num_frames": num_frames, "frame_stride": frame_stride}
+    train_dataset = AutoDriveDataset(
+        data_folder,
+        mode="train",
+        split_name="train_clean",
+        transform=train_transform,
+        return_meta=True,
+        teacher_config=teacher_preprocess,
+        **dataset_kwargs,
+    )
+    val_dataset = AutoDriveDataset(data_folder, mode="val", split_name="val_clean", transform=eval_transform, **dataset_kwargs)
+    test_dataset = AutoDriveDataset(data_folder, mode="test", split_name="test_clean", transform=eval_transform, **dataset_kwargs)
 
-    # 加载预训练模型
+    data_folder_path = Path(data_folder)
+    has_explicit_val_style_real = any(
+        (data_folder_path / candidate).is_file() for candidate in ("val_style_real.txt", "val_style.txt")
+    )
+    if has_explicit_val_style_real:
+        val_style_real_dataset = AutoDriveDataset(
+            data_folder,
+            mode="val_style_real",
+            split_name="val_style_real",
+            transform=eval_transform,
+            **dataset_kwargs,
+        )
+        has_val_style_real = True
+    else:
+        val_style_real_dataset = None
+        has_val_style_real = False
+
+    val_stress_dataset = AutoDriveDataset(
+        data_folder,
+        mode="val",
+        split_name="val_clean",
+        transform=stress_transform,
+        deterministic_seed=20260418,
+        **dataset_kwargs,
+    )
+
+    angle_vocab = build_angle_vocab(train_dataset.angles)
+    if model_variant in {"legacy", "original", "baseline"}:
+        model = AutoDriveLegacyNet().to(device)
+        use_pretrained = False
+        freeze_backbone_epochs = 0
+        aux_cls_weight = 0.0
+        teacher_weight = 0.0
+        num_frames = 1
+    elif model_variant in {"mobilenet_v1", "current", "baseline_mobilenet"}:
+        model = AutoDriveNetV1(num_aux_classes=len(angle_vocab), use_pretrained=use_pretrained).to(device)
+        teacher_weight = 0.0
+    elif "temporal" in model_variant:
+        if num_frames < 2:
+            raise ValueError(f"temporal model requires num_frames >= 2, got {num_frames}")
+        model = AutoDriveNetTemporal(
+            num_aux_classes=len(angle_vocab),
+            use_pretrained=use_pretrained,
+            num_frames=num_frames,
+        ).to(device)
+    else:
+        model = AutoDriveNet(num_aux_classes=len(angle_vocab), use_pretrained=use_pretrained).to(device)
+
+    print(
+        f"ModelConfig variant={model_variant} use_pretrained={int(use_pretrained)} pretrained_loaded={int(getattr(model, 'pretrained_loaded', False))} "
+        f"freeze_backbone_epochs={freeze_backbone_epochs} aux_cls_weight={aux_cls_weight:.3f} teacher_weight={teacher_weight:.3f} "
+        f"ema_decay={ema_decay:.4f} preprocess={preprocess_config_to_dict(aug_config.preprocess)} "
+        f"num_frames={num_frames} frame_stride={frame_stride} angle_vocab={angle_vocab}"
+    )
+    print(f"ModelTrainableParams { _count_trainable_params(model) }")
+
+    ema = ModelEMA(model, ema_decay)
     if checkpoint is not None:
-        checkpoint = torch.load(checkpoint)
-        start_epoch = checkpoint['epoch'] + 1
-        model.load_state_dict(checkpoint['model'])
-        optimizer.load_state_dict(checkpoint['optimizer'])
+        ckpt = torch.load(checkpoint, map_location=device)
+        start_epoch = int(ckpt.get("epoch", 0)) + 1
+        raw_state = ckpt.get("modelRaw", ckpt.get("model", {}))
+        _unwrap(model).load_state_dict(raw_state, strict=True)
+        ema_state = ckpt.get("emaState", ckpt.get("model", {}))
+        ema.load_state_dict(ema_state)
 
-    # 单机多卡训练
-    if torch.cuda.is_available() and ngpu > 1:
-        model = nn.DataParallel(model, device_ids=list(range(ngpu)))
+    train_sampler = None
+    sampler_debug = None
+    if use_weighted_sampler:
+        sampler_config = _build_sampler_config(len(train_dataset))
+        _, raw_sampler_debug = compute_sample_weights(train_dataset.angles, sampler_config, return_debug=True)
+        sampler_debug = {
+            "edges": [float(x) for x in raw_sampler_debug["edges"].tolist()],
+            "counts": [int(x) for x in raw_sampler_debug["counts"].tolist()],
+            "useAbsAngle": bool(raw_sampler_debug["useAbsAngle"]),
+            "weightsMin": float(raw_sampler_debug["weightsMin"]),
+            "weightsMax": float(raw_sampler_debug["weightsMax"]),
+            "weightsMean": float(raw_sampler_debug["weightsMean"]),
+        }
+        train_sampler = build_weighted_sampler(train_dataset.angles, sampler_config)
+        print(
+            "WeightedRandomSampler enabled | "
+            f"bins={sampler_config.num_bins} use_abs_angle={sampler_config.use_abs_angle} "
+            f"weight_min={sampler_debug['weightsMin']:.4f} weight_max={sampler_debug['weightsMax']:.4f} weight_mean={sampler_debug['weightsMean']:.4f}"
+        )
+    else:
+        print("WeightedRandomSampler disabled; train DataLoader will use shuffle=True")
 
-    # 定制化的dataloader
-    transformations = transforms.Compose([
-        transforms.Resize((120, 160)),
-        transforms.ToTensor(),  # 通道置前并且将0-255RGB值映射至0-1
-        # transforms.Normalize(
-        #     mean=[0.485, 0.456, 0.406],  # 归一化至[-1,1] mean std 来自imagenet 计算
-        #     std=[0.229, 0.224, 0.225])
-    ])
+    train_loader = torch.utils.data.DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=train_sampler is None,
+        sampler=train_sampler,
+        num_workers=0,
+        pin_memory=torch.cuda.is_available(),
+    )
+    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=0, pin_memory=torch.cuda.is_available())
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=0, pin_memory=torch.cuda.is_available())
+    val_stress_loader = torch.utils.data.DataLoader(val_stress_dataset, batch_size=batch_size, shuffle=False, num_workers=0, pin_memory=torch.cuda.is_available())
+    val_style_real_loader = (
+        torch.utils.data.DataLoader(val_style_real_dataset, batch_size=batch_size, shuffle=False, num_workers=0, pin_memory=torch.cuda.is_available())
+        if val_style_real_dataset is not None
+        else None
+    )
 
-    train_dataset = AutoDriveDataset(data_folder,
-                                     mode='train',
-                                     transform=transformations)
-    train_loader = torch.utils.data.DataLoader(train_dataset,
-                                               batch_size=batch_size,
-                                               shuffle=True,
-                                               num_workers=0,
-                                               pin_memory=True)
+    reg_criterion = nn.SmoothL1Loss().to(device)
+    aux_criterion = SoftTargetCrossEntropy().to(device)
 
-    # 开始逐轮训练
+    output_dir.mkdir(parents=True, exist_ok=True)
+    latest_path = output_dir / save_name
+    best_path = output_dir / best_save_name
+    summary_path = output_dir / "training_summary.json"
+
+    selection_metric_name = "val_style_real_mae" if has_val_style_real else "val_stress_mae_fallback"
+    best_selection_metric = float("inf")
+    best_epoch = 0
+    no_improve_count = 0
+    completed_epochs = start_epoch - 1
+    stopped_epoch = None
+    early_stopped = False
+    last_train_metrics = {"total_loss": 0.0, "reg_loss": 0.0, "aux_loss": 0.0, "distill_loss": 0.0, "mae": 0.0}
+    last_val_metrics = {"total_loss": 0.0, "reg_loss": 0.0, "aux_loss": 0.0, "distill_loss": 0.0, "mae": 0.0}
+    last_val_style_real_metrics = None
+    last_val_stress_metrics = {"total_loss": 0.0, "reg_loss": 0.0, "aux_loss": 0.0, "distill_loss": 0.0, "mae": 0.0}
+
+    current_stage = None
+    base_model = _unwrap(model)
+    optimizer = None
+    scheduler = None
+
     for epoch in range(start_epoch, epochs + 1):
+        desired_stage = "head" if freeze_backbone_epochs > 0 and epoch <= freeze_backbone_epochs else "full"
+        if desired_stage != current_stage:
+            optimizer, scheduler = _configure_optimizer(
+                base_model,
+                lr=lr,
+                weight_decay=weight_decay,
+                backbone_lr_factor=backbone_lr_factor,
+                freeze_backbone=(desired_stage == "head"),
+            )
+            current_stage = desired_stage
+            print(f"TrainingStage epoch={epoch} stage={current_stage} backbone_trainable={int(current_stage == 'full')}")
 
-        model.train()  # 训练模式：允许使用批样本归一化
-        loss_epoch = AverageMeter()  # 统计损失函数
-        n_iter = len(train_loader)
+        last_train_metrics = _run_epoch(
+            model=model,
+            loader=train_loader,
+            device=device,
+            reg_criterion=reg_criterion,
+            aux_criterion=aux_criterion,
+            angle_vocab=angle_vocab,
+            aux_cls_weight=aux_cls_weight,
+            soft_label_temperature=soft_label_temperature,
+            soft_label_neighbors=soft_label_neighbors,
+            teacher_model=teacher_model,
+            teacher_weight=teacher_weight,
+            optimizer=optimizer,
+            grad_clip=grad_clip,
+            ema=ema,
+        )
 
-        # 按批处理
-        for i, (imgs, labels) in enumerate(train_loader):
-            print(f"Batch {i}: imgs.shape = {imgs.shape}")
-            # 数据移至默认设备进行训练
-            imgs = imgs.to(device)
-            labels = labels.to(device)
+        eval_model = ema.ema_model
+        last_val_metrics = _run_epoch(
+            model=eval_model,
+            loader=val_loader,
+            device=device,
+            reg_criterion=reg_criterion,
+            aux_criterion=aux_criterion,
+            angle_vocab=angle_vocab,
+            aux_cls_weight=aux_cls_weight,
+            soft_label_temperature=soft_label_temperature,
+            soft_label_neighbors=soft_label_neighbors,
+            optimizer=None,
+        )
+        if val_style_real_loader is not None:
+            last_val_style_real_metrics = _run_epoch(
+                model=eval_model,
+                loader=val_style_real_loader,
+                device=device,
+                reg_criterion=reg_criterion,
+                aux_criterion=aux_criterion,
+                angle_vocab=angle_vocab,
+                aux_cls_weight=aux_cls_weight,
+                soft_label_temperature=soft_label_temperature,
+                soft_label_neighbors=soft_label_neighbors,
+                optimizer=None,
+            )
+        last_val_stress_metrics = _run_epoch(
+            model=eval_model,
+            loader=val_stress_loader,
+            device=device,
+            reg_criterion=reg_criterion,
+            aux_criterion=aux_criterion,
+            angle_vocab=angle_vocab,
+            aux_cls_weight=aux_cls_weight,
+            soft_label_temperature=soft_label_temperature,
+            soft_label_neighbors=soft_label_neighbors,
+            optimizer=None,
+        )
 
-            # 前向传播
-            pre_labels = model(imgs)
+        completed_epochs = epoch
+        selection_metric = (last_val_style_real_metrics or last_val_stress_metrics)["mae"]
+        scheduler.step(selection_metric)
+        current_lr = max(group["lr"] for group in optimizer.param_groups)
 
-            # 计算损失
-            loss = criterion(pre_labels, labels)
+        writer.add_scalar("Train_Total_Loss", last_train_metrics["total_loss"], epoch)
+        writer.add_scalar("Train_Reg_Loss", last_train_metrics["reg_loss"], epoch)
+        writer.add_scalar("Train_Aux_Loss", last_train_metrics["aux_loss"], epoch)
+        writer.add_scalar("Train_Distill_Loss", last_train_metrics["distill_loss"], epoch)
+        writer.add_scalar("Train_MAE", last_train_metrics["mae"], epoch)
+        writer.add_scalar("Val_Clean_MAE", last_val_metrics["mae"], epoch)
+        writer.add_scalar("Val_Stress_MAE", last_val_stress_metrics["mae"], epoch)
+        if last_val_style_real_metrics is not None:
+            writer.add_scalar("Val_Style_Real_MAE", last_val_style_real_metrics["mae"], epoch)
+        writer.add_scalar("LR", current_lr, epoch)
 
-            # 后向传播
-            optimizer.zero_grad()
-            loss.backward()
+        val_style_text = f"{last_val_style_real_metrics['mae']:.6f}" if last_val_style_real_metrics is not None else "NA"
+        print(
+            f"epoch:{epoch}"
+            f"  Train_Total_Loss:{last_train_metrics['total_loss']:.6f}"
+            f"  Train_Distill_Loss:{last_train_metrics['distill_loss']:.6f}"
+            f"  Train_MAE:{last_train_metrics['mae']:.6f}"
+            f"  Val_Clean_MAE:{last_val_metrics['mae']:.6f}"
+            f"  Val_Style_Real_MAE:{val_style_text}"
+            f"  Val_Stress_MAE:{last_val_stress_metrics['mae']:.6f}"
+            f"  LR:{current_lr:.6f}"
+        )
 
-            # 更新模型
-            optimizer.step()
+        payload = _make_checkpoint_payload(
+            epoch=epoch,
+            best_epoch=best_epoch,
+            best_metric=best_selection_metric,
+            angle_vocab=angle_vocab,
+            preprocess=aug_config.preprocess,
+            model_variant=model_variant,
+            base_model=base_model,
+            ema=ema,
+            num_frames=num_frames,
+            frame_stride=frame_stride,
+        )
+        torch.save(payload, latest_path)
 
-            # 记录损失值
-            loss_epoch.update(loss.item(), imgs.size(0))
+        if selection_metric < best_selection_metric - early_stop_min_delta:
+            best_selection_metric = selection_metric
+            best_epoch = epoch
+            no_improve_count = 0
+            payload["bestEpoch"] = best_epoch
+            payload["bestSelectionMetric"] = best_selection_metric
+            torch.save(payload, best_path)
+        else:
+            no_improve_count += 1
+            if no_improve_count >= early_stop_patience:
+                early_stopped = True
+                stopped_epoch = epoch
+                print(
+                    f"EarlyStopping triggered at epoch {epoch} | best_epoch {best_epoch} | best_{selection_metric_name} {best_selection_metric:.6f}"
+                )
+                break
 
-            # 打印结果
-            print("第 " + str(i) + " 个batch训练结束")
+    if best_epoch == 0:
+        best_epoch = completed_epochs
+        best_selection_metric = (last_val_style_real_metrics or last_val_stress_metrics)["mae"]
+        if latest_path.is_file() and not best_path.is_file():
+            torch.save(torch.load(latest_path, map_location="cpu"), best_path)
 
-        # 手动释放内存
-        del imgs, labels, pre_labels
+    best_checkpoint = torch.load(best_path if best_path.is_file() else latest_path, map_location=device)
+    eval_model = copy.deepcopy(base_model).to(device)
+    eval_model.load_state_dict(best_checkpoint["model"], strict=True)
+    eval_model.eval()
+    test_metrics = _run_epoch(
+        model=eval_model,
+        loader=test_loader,
+        device=device,
+        reg_criterion=reg_criterion,
+        aux_criterion=aux_criterion,
+        angle_vocab=angle_vocab,
+        aux_cls_weight=aux_cls_weight,
+        soft_label_temperature=soft_label_temperature,
+        soft_label_neighbors=soft_label_neighbors,
+        optimizer=None,
+    )
+    writer.add_scalar("Test_Clean_MAE", test_metrics["mae"], 0)
 
-        # 监控损失值变化
-        writer.add_scalar('MSE_Loss', loss_epoch.avg, epoch)
-        print('epoch:' + str(epoch) + '  MSE_Loss:' + str(loss_epoch.avg))
-
-        # 如果 model 使用了 DataParallel，则 model.module 是实际模型，否则直接用 model
-        model_state_dict = model.module.state_dict() if hasattr(model, "module") else model.state_dict()
-
-        torch.save({
-            'model': model_state_dict,
-            'optimizer': optimizer.state_dict(),
-        }, 've2.pth')
-
-    # 训练结束关闭监控
+    summary = {
+        "dataFolder": data_folder,
+        "datasetLabelShiftFrames": dataset_summary.get("labelShiftFrames"),
+        "requestedEpochs": epochs,
+        "completedEpochs": completed_epochs,
+        "bestEpoch": best_epoch,
+        "stoppedEpoch": stopped_epoch,
+        "earlyStopped": early_stopped,
+        "modelSelectionMetric": selection_metric_name,
+        "selectionMetricValue": float(best_selection_metric),
+        "modelVariant": model_variant,
+        "usePretrained": use_pretrained,
+        "pretrainedLoaded": bool(getattr(base_model, "pretrained_loaded", False)),
+        "freezeBackboneEpochs": freeze_backbone_epochs,
+        "auxClsWeight": aux_cls_weight,
+        "teacherWeight": teacher_weight,
+        "teacherEnabled": teacher_model is not None and teacher_weight > 0,
+        "teacherCheckpoint": teacher_ckpt,
+        "emaDecay": ema_decay,
+        "softLabelTemperature": soft_label_temperature,
+        "softLabelNeighbors": soft_label_neighbors,
+        "preprocess": preprocess_config_to_dict(aug_config.preprocess),
+        "numFrames": num_frames,
+        "frameStride": frame_stride,
+        "angleVocab": angle_vocab,
+        "hasValStyleRealSplit": has_val_style_real,
+        "finalTrainLoss": float(last_train_metrics["total_loss"]),
+        "finalValCleanLoss": float(last_val_metrics["total_loss"]),
+        "finalValCleanMAE": float(last_val_metrics["mae"]),
+        "finalValStyleRealMAE": float(last_val_style_real_metrics["mae"]) if last_val_style_real_metrics is not None else None,
+        "finalValStressMAE": float(last_val_stress_metrics["mae"]),
+        "steeringError": float(best_selection_metric),
+        "finalTrainMAE": float(last_train_metrics["mae"]),
+        "finalTrainDistillLoss": float(last_train_metrics["distill_loss"]),
+        "finalTestCleanLoss": float(test_metrics["total_loss"]),
+        "finalTestCleanMAE": float(test_metrics["mae"]),
+        "finalTestLoss": float(test_metrics["total_loss"]),
+        "finalTestMAE": float(test_metrics["mae"]),
+        "usedDedicatedTestSplit": True,
+        "sampler": sampler_debug,
+    }
+    _write_summary(summary_path, summary)
+    print(
+        f"TrainingSummary requested_epochs={epochs} completed_epochs={completed_epochs} "
+        f"best_epoch={best_epoch} early_stopped={int(early_stopped)} stopped_epoch={stopped_epoch or 0} "
+        f"best_{selection_metric_name}={best_selection_metric:.6f}"
+    )
     writer.close()
 
 
-if __name__ == '__main__':
-    '''
-    程序入口
-    '''
+if __name__ == "__main__":
     main()

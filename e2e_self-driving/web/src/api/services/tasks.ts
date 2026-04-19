@@ -9,6 +9,7 @@ import type {
 } from "@/api/types";
 
 export interface CreateTaskPayload {
+  projectId: string;
   datasetId: string;
   learningRate: number;
   batchSize: number;
@@ -29,8 +30,10 @@ export interface CreateTaskPayload {
   name?: string;
 }
 
-export async function listTasks(): Promise<TrainingTaskSummary[]> {
-  const { data } = await getApiClient().get<TrainingTaskSummary[]>(paths.tasks);
+export async function listTasks(projectId?: string): Promise<TrainingTaskSummary[]> {
+  const { data } = await getApiClient().get<TrainingTaskSummary[]>(paths.tasks, {
+    params: projectId ? { projectId } : undefined,
+  });
   return data;
 }
 

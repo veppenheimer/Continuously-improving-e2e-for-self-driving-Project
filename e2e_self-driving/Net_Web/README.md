@@ -50,14 +50,51 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 | `app/main.py` | FastAPI 应用入口 |
 | `app/routers/` | `auth`、`datasets`、`tasks` 路由 |
 | `app/training_runner.py` | 训练循环与检查点保存 |
-| `app/services/` | ZIP  ingest、推理预处理 |
+| `app/services/` | ZIP ingest、推理预处理 |
 | `create_data_lists.py` | 离线生成本地列表（可选；网页上传不需要） |
+
+## 竞赛分类模型说明
+
+当前 Web 端已经接入 `e2e_competition/Net_class` 的高精度分类链路。
+
+### 训练任务中的 `competitionClass`
+
+当任务启用分类竞赛模型后：
+
+- Web 后端会调用 `e2e_competition/Net_class/train.py`
+- 分类模型输出为 `9` 个类别 logits 加 `1` 个残差，共 `10` 维
+- `competitionClass.steeringError` 表示真实角度误差，即 `Val_Angle_MAE`
+- TensorBoard 中会记录：
+  - `CE_Loss`
+  - `Val_CE_Loss`
+  - `Train_Acc`
+  - `Val_Acc`
+  - `Train_Angle_MAE`
+  - `Val_Angle_MAE`
+
+### 比较推理中的 `competitionClass`
+
+`/tasks/{id}/infer/compare` 在加载分类竞赛模型时，不再使用“`argmax + 固定角度表`”的硬解码方式，而是复用 `Net_class/steering_config.py` 中的 `decode_output()`：
+
+- 先确定主类别所在转向组
+- 仅在组内做 softmax 加权
+- 再叠加残差头输出的微小偏移
+
+这样能让分类模型在不增加太多部署复杂度的前提下，输出更连续、更贴近真实场地需求的转向角。
+
+### 与 `competitionLite` 的关系
+
+- `competitionClass` 对应 `e2e_competition/Net_class`
+- `competitionLite` 对应 `e2e_competition/Net_improve`
+
+两条链路分别维护；本次高精度分类改造不影响 `competitionLite`。
 
 ## 注意事项
 
 - **进程重启**后内存中的训练曲线会丢失；任务状态与结果在 SQLite 中仍可查，但进度曲线可能为空直至新任务产生数据。
 - 训练占用 GPU/CPU 资源较大；单机可同时跑多个任务，请自行控制并发。
 - 暂停在 **epoch 边界**生效；终止会在当前 epoch 内尽快跳出。
+- 分类竞赛模型依赖 `e2e_competition/Net_class/steering_config.py`；如果你调整该目录下的解码规则，Web 端会同步复用。
 
 ## 与 `Net/` 的关系
 

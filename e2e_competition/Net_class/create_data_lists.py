@@ -1,82 +1,84 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-# 导入系统库
 import os
 import random
 
-from steering_config import STEERING_CLASSES, angle_to_class, class_to_angle
+from steering_config import STEERING_CLASSES
 
 
-def creat_data_list(dataset_path, file_list, mode='train'):
-    '''
-    创建txt文件列表（每行：图像路径 + 空格 + 最近邻九类之一对应的转向角）
-    '''
-    with open(os.path.join(dataset_path, (mode + '.txt')), 'w') as f:
-        for (imgpath, angle) in file_list:
-            f.write(imgpath + ' ' + str(angle) + '\n')
-    print(mode + '.txt 已生成')
+def create_data_list(dataset_path, file_list, mode="train"):
+    with open(os.path.join(dataset_path, f"{mode}.txt"), "w", encoding="utf-8") as f:
+        for img_path, angle in file_list:
+            f.write(f"{img_path} {angle}\n")
+    print(f"{mode}.txt generated")
 
 
-def getFileList(dir, Filelist, ext=None):
-    """
-    获取文件夹及其子文件夹中文件列表
-    输入 dir: 文件夹根目录
-    输入 ext: 扩展名
-    返回: 文件路径列表
-    """
-    newDir = dir
-    if os.path.isfile(dir):
-        if ext is None:
-            Filelist.append(dir)
-        else:
-            if ext in dir[-3:]:
-                Filelist.append(dir)
+def get_file_list(path, file_list, ext=None):
+    if os.path.isfile(path):
+        if ext is None or path.lower().endswith(ext.lower()):
+            file_list.append(path)
+        return file_list
 
-    elif os.path.isdir(dir):
-        for s in os.listdir(dir):
-            newDir = os.path.join(dir, s)
-            getFileList(newDir, Filelist, ext)
+    if os.path.isdir(path):
+        for entry in os.listdir(path):
+            get_file_list(os.path.join(path, entry), file_list, ext)
+    return file_list
 
-    return Filelist
+
+def split_three_way(file_list, train_ratio=0.7, val_ratio=0.15):
+    n_total = len(file_list)
+    if n_total < 3:
+        raise RuntimeError("at least 3 images are required to build train/val/test splits")
+
+    n_train = max(1, int(n_total * train_ratio))
+    n_val = max(1, int(n_total * val_ratio))
+    n_test = n_total - n_train - n_val
+
+    if n_test < 1:
+        deficit = 1 - n_test
+        take_from_train = min(deficit, max(0, n_train - 1))
+        n_train -= take_from_train
+        deficit -= take_from_train
+        take_from_val = min(deficit, max(0, n_val - 1))
+        n_val -= take_from_val
+        deficit -= take_from_val
+        if deficit > 0:
+            raise RuntimeError("dataset is too small to keep non-empty train/val/test splits")
+        n_test = n_total - n_train - n_val
+
+    train_list = file_list[:n_train]
+    val_list = file_list[n_train:n_train + n_val]
+    test_list = file_list[n_train + n_val:]
+    return train_list, val_list, test_list
 
 
 def main():
-    '''
-    主函数：从文件名解析原始角度，量化到九类档位后写入列表
-    '''
-    # 设置参数
-    org_img_folder = './data/1_1'  # 数据集根目录
-    train_ratio = 0.8  # 训练集占比
+    org_img_folder = "./data/1_1"
+    train_ratio = 0.7
+    val_ratio = 0.15
 
-    # 检索jpg文件
-    jpglist = getFileList(org_img_folder, [], 'jpg')
-    print('本次执行检索到 ' + str(len(jpglist)) + ' 个jpg文件\n')
-    print('九类转向角档位:', STEERING_CLASSES)
+    jpg_list = get_file_list(org_img_folder, [], "jpg")
+    print(f"found {len(jpg_list)} jpg files")
+    print("steering prototypes:", STEERING_CLASSES)
 
-    file_list = list()
-    for jpgpath in jpglist:
-        print(jpgpath)
-        curDataDir = os.path.dirname(jpgpath)
-        basename = os.path.basename(jpgpath)
-        raw_angle = float((basename[:-4]).split('_')[-1])
-        cls = angle_to_class(raw_angle)
-        canonical_angle = class_to_angle(cls)
-        imgPath = os.path.join(curDataDir, basename).replace("\\", "/")
-        file_list.append((imgPath, canonical_angle))
+    file_list = []
+    for jpg_path in jpg_list:
+        print(jpg_path)
+        cur_dir = os.path.dirname(jpg_path)
+        basename = os.path.basename(jpg_path)
+        raw_angle = float(os.path.splitext(basename)[0].split("_")[-1])
+        img_path = os.path.join(cur_dir, basename).replace("\\", "/")
+        file_list.append((img_path, raw_angle))
 
     random.seed(256)
     random.shuffle(file_list)
-    train_num = int(len(file_list) * train_ratio)
-    train_list = file_list[0:train_num]
-    val_list = file_list[train_num:]
+    train_list, val_list, test_list = split_three_way(file_list, train_ratio=train_ratio, val_ratio=val_ratio)
 
-    creat_data_list(org_img_folder, train_list, mode='train')
-    creat_data_list(org_img_folder, val_list, mode='val')
+    create_data_list(org_img_folder, train_list, mode="train")
+    create_data_list(org_img_folder, val_list, mode="val")
+    create_data_list(org_img_folder, test_list, mode="test")
 
 
 if __name__ == "__main__":
-    '''
-    程序入口
-    '''
     main()

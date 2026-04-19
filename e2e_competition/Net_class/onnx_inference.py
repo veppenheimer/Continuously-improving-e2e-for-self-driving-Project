@@ -2,7 +2,7 @@ import onnxruntime as ort
 import numpy as np
 import cv2
 
-from steering_config import STEERING_CLASSES, class_to_angle
+from steering_config import MAX_DELTA, STEERING_CLASSES, decode_output, split_output
 
 onnx_path = "0606x_static_quantized_model.onnx"
 img_path = "image_test/2_0.0000.jpg"
@@ -20,9 +20,11 @@ ort_session = ort.InferenceSession(onnx_path)
 ort_inputs = {ort_session.get_inputs()[0].name: img}
 ort_output = ort_session.run(None, ort_inputs)
 
-logits = ort_output[0][0]
+output = ort_output[0][0]
+logits, raw_delta = split_output(output)
 cls = int(np.argmax(logits))
-angle = class_to_angle(cls)
+angle = float(np.asarray(decode_output(output)).reshape(-1)[0])
+delta = float(np.tanh(raw_delta) * MAX_DELTA)
 
-print(f"ONNX logits shape: {np.array(logits).shape}")
-print(f"预测类别索引: {cls}, 对应转向角: {angle} (档位表: {STEERING_CLASSES})")
+print(f"ONNX output shape: {np.array(output).shape}")
+print(f"棰勬祴绫诲埆绱㈠紩: {cls}, 杩炵画杞悜瑙? {angle}, residual {delta:.6f} (妗ｄ綅琛? {STEERING_CLASSES})")

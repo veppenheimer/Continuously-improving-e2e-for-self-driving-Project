@@ -1,0 +1,148 @@
+{
+  "createdAt": "2026-04-18T22:02:36",
+  "device": "cuda",
+  "models": [
+    {
+      "name": "mobilenet_v2",
+      "ckpt": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\best_ve2_mobilenet_v2_proxy_existing_source.pth",
+      "preprocess": {
+        "colorSpace": "hsv",
+        "inputSize": [
+          144,
+          192
+        ],
+        "useRoi": false
+      }
+    }
+  ],
+  "records": [
+    {
+      "name": "data1",
+      "kind": "flat",
+      "folder": "E:\\桌面\\data1",
+      "numImages": 1743,
+      "mae": {
+        "mobilenet_v2": 0.16001879325151291
+      },
+      "json": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\data1\\regression_compare.json",
+      "csv": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\data1\\regression_compare.csv",
+      "angleCsv": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\data1\\regression_compare_by_angle.csv",
+      "plot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\data1\\regression_compare.png"
+    },
+    {
+      "name": "kunmingr2",
+      "kind": "recursive",
+      "root": "E:\\桌面\\kunmingr2",
+      "numFolders": 10,
+      "numImages": 1078,
+      "mae": {
+        "mobilenet_v2": 0.5633705794554652
+      },
+      "folderSummaryCsv": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\recursive_regression_folder_summary.csv",
+      "folderSummaryPlot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\recursive_regression_folder_mae.png",
+      "index": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\recursive_regression_index.json",
+      "folders": [
+        {
+          "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\1\\1",
+          "relativeFolder": "kunmingr2/1/1",
+          "numImages": 108,
+          "mae": {
+            "mobilenet_v2": 0.8080650370595632
+          },
+          "plot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\kunmingr2__1__1\\regression_compare.png",
+          "json": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\kunmingr2__1__1\\regression_compare.json"
+        },
+        {
+          "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\1\\2",
+          "relativeFolder": "kunmingr2/1/2",
+          "numImages": 107,
+          "mae": {
+            "mobilenet_v2": 0.7813666369104496
+          },
+          "plot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\kunmingr2__1__2\\regression_compare.png",
+          "json": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\kunmingr2__1__2\\regression_compare.json"
+        },
+        {
+          "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\1",
+          "relativeFolder": "kunmingr2/2/1",
+          "numImages": 91,
+          "mae": {
+            "mobilenet_v2": 0.561226347195185
+          },
+          "plot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\kunmingr2__2__1\\regression_compare.png",
+          "json": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\kunmingr2__2__1\\regression_compare.json"
+        },
+        {
+          "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2",
+          "relativeFolder": "kunmingr2/2/2",
+          "numImages": 91,
+          "mae": {
+            "mobilenet_v2": 0.39883728827598325
+          },
+          "plot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\kunmingr2__2__2\\regression_compare.png",
+          "json": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\kunmingr2__2__2\\regression_compare.json"
+        },
+        {
+          "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\1",
+          "relativeFolder": "kunmingr2/3/1",
+          "numImages": 161,
+          "mae": {
+            "mobilenet_v2": 0.39228230385729884
+          },
+          "plot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\kunmingr2__3__1\\regression_compare.png",
+          "json": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\kunmingr2__3__1\\regression_compare.json"
+        },
+        {
+          "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2",
+          "relativeFolder": "kunmingr2/3/2",
+          "numImages": 159,
+          "mae": {
+            "mobilenet_v2": 0.5755063761452084
+          },
+          "plot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\kunmingr2__3__2\\regression_compare.png",
+          "json": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\kunmingr2__3__2\\regression_compare.json"
+        },
+        {
+          "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\4\\1",
+          "relativeFolder": "kunmingr2/4/1",
+          "numImages": 83,
+          "mae": {
+            "mobilenet_v2": 0.7029180003688995
+          },
+          "plot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\kunmingr2__4__1\\regression_compare.png",
+          "json": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\kunmingr2__4__1\\regression_compare.json"
+        },
+        {
+          "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\4\\2",
+          "relativeFolder": "kunmingr2/4/2",
+          "numImages": 83,
+          "mae": {
+            "mobilenet_v2": 0.6361555850402418
+          },
+          "plot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\kunmingr2__4__2\\regression_compare.png",
+          "json": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\kunmingr2__4__2\\regression_compare.json"
+        },
+        {
+          "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\5\\1",
+          "relativeFolder": "kunmingr2/5/1",
+          "numImages": 97,
+          "mae": {
+            "mobilenet_v2": 0.3460564264281432
+          },
+          "plot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\kunmingr2__5__1\\regression_compare.png",
+          "json": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\kunmingr2__5__1\\regression_compare.json"
+        },
+        {
+          "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\5\\2",
+          "relativeFolder": "kunmingr2/5/2",
+          "numImages": 98,
+          "mae": {
+            "mobilenet_v2": 0.5071111631904329
+          },
+          "plot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\kunmingr2__5__2\\regression_compare.png",
+          "json": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\single_model_analysis_20260418_01\\kunmingr2\\kunmingr2__5__2\\regression_compare.json"
+        }
+      ]
+    }
+  ]
+}

@@ -16,6 +16,7 @@ export type TaskStatus =
 
 export interface TrainingTaskSummary {
   id: string;
+  projectId: string;
   /** 用户自定义或后端默认的显示名称 */
   name: string;
   status: TaskStatus;
@@ -110,6 +111,7 @@ export interface TaskResultSummary {
 
 export interface DatasetItem {
   id: string;
+  projectId: string;
   name: string;
   imageCount?: number;
   createdAt: string;
@@ -120,6 +122,12 @@ export interface CompareInferenceResult {
   augmentedSteering?: number;
   competitionClassSteering?: number;
   competitionLiteSteering?: number;
+}
+
+export interface ProjectItem {
+  id: string;
+  name: string;
+  createdAt: string;
 }
 
 /** 后端统一错误体（可调整） */

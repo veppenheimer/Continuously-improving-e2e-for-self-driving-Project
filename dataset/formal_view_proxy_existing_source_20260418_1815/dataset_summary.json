@@ -1,0 +1,26 @@
+{
+  "source": "E:\\桌面\\data",
+  "destination": "E:\\桌面\\项目\\dataset\\formal_view_proxy_existing_source_20260418_1815",
+  "seed": 256,
+  "trainRatio": 0.7,
+  "valRatio": 0.15,
+  "numImages": 1743,
+  "splits": {
+    "train": 1220,
+    "val": 261,
+    "test": 262
+  },
+  "uniqueAngles": [
+    -1.62,
+    -1.6,
+    -1.58,
+    -1.56,
+    -1.5,
+    0.0,
+    1.5,
+    1.51,
+    1.511,
+    1.64,
+    1.72
+  ]
+}

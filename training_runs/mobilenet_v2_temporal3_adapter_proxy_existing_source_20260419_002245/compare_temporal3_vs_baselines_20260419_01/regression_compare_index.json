@@ -1,0 +1,202 @@
+{
+  "createdAt": "2026-04-19T01:32:34",
+  "device": "cuda",
+  "models": [
+    {
+      "name": "legacy",
+      "ckpt": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\Net_regression_legacy_original\\best_ve2_legacy_original_regression.pth",
+      "preprocess": {
+        "colorSpace": "hsv",
+        "inputSize": [
+          120,
+          160
+        ],
+        "useRoi": false
+      },
+      "numFrames": 1,
+      "frameStride": 1
+    },
+    {
+      "name": "mobilenet_v2_single",
+      "ckpt": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_proxy_existing_source_20260418_1815\\best_ve2_mobilenet_v2_proxy_existing_source.pth",
+      "preprocess": {
+        "colorSpace": "hsv",
+        "inputSize": [
+          144,
+          192
+        ],
+        "useRoi": false
+      },
+      "numFrames": 1,
+      "frameStride": 1
+    },
+    {
+      "name": "mobilenet_v2_temporal3",
+      "ckpt": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\best_ve2_mobilenet_v2_temporal3_adapter_proxy_existing_source.pth",
+      "preprocess": {
+        "colorSpace": "hsv",
+        "inputSize": [
+          144,
+          192
+        ],
+        "useRoi": false
+      },
+      "numFrames": 3,
+      "frameStride": 1
+    }
+  ],
+  "records": [
+    {
+      "name": "data1",
+      "kind": "flat",
+      "folder": "E:\\桌面\\data1",
+      "numImages": 1743,
+      "mae": {
+        "legacy": 0.19306863238157654,
+        "mobilenet_v2_single": 0.16001879325151291,
+        "mobilenet_v2_temporal3": 0.060089869977924516
+      },
+      "json": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\data1\\regression_compare.json",
+      "csv": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\data1\\regression_compare.csv",
+      "angleCsv": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\data1\\regression_compare_by_angle.csv",
+      "plot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\data1\\regression_compare.png"
+    },
+    {
+      "name": "kunmingr2",
+      "kind": "recursive",
+      "root": "E:\\桌面\\kunmingr2",
+      "numFolders": 10,
+      "numImages": 1078,
+      "mae": {
+        "legacy": 1.5801217427331575,
+        "mobilenet_v2_single": 0.5633705794554652,
+        "mobilenet_v2_temporal3": 0.537474587602717
+      },
+      "folderSummaryCsv": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\recursive_regression_folder_summary.csv",
+      "folderSummaryPlot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\recursive_regression_folder_mae.png",
+      "index": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\recursive_regression_index.json",
+      "folders": [
+        {
+          "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\1\\1",
+          "relativeFolder": "kunmingr2/1/1",
+          "numImages": 108,
+          "mae": {
+            "legacy": 2.1489711030158736,
+            "mobilenet_v2_single": 0.8080650370595632,
+            "mobilenet_v2_temporal3": 0.7559664767111343
+          },
+          "plot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\kunmingr2__1__1\\regression_compare.png",
+          "json": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\kunmingr2__1__1\\regression_compare.json"
+        },
+        {
+          "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\1\\2",
+          "relativeFolder": "kunmingr2/1/2",
+          "numImages": 107,
+          "mae": {
+            "legacy": 2.1266865460337883,
+            "mobilenet_v2_single": 0.7813666369104496,
+            "mobilenet_v2_temporal3": 0.7409189451994184
+          },
+          "plot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\kunmingr2__1__2\\regression_compare.png",
+          "json": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\kunmingr2__1__2\\regression_compare.json"
+        },
+        {
+          "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\1",
+          "relativeFolder": "kunmingr2/2/1",
+          "numImages": 91,
+          "mae": {
+            "legacy": 2.075771315957425,
+            "mobilenet_v2_single": 0.561226347195185,
+            "mobilenet_v2_temporal3": 0.5214748488982955
+          },
+          "plot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\kunmingr2__2__1\\regression_compare.png",
+          "json": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\kunmingr2__2__1\\regression_compare.json"
+        },
+        {
+          "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2",
+          "relativeFolder": "kunmingr2/2/2",
+          "numImages": 91,
+          "mae": {
+            "legacy": 2.1025535104578665,
+            "mobilenet_v2_single": 0.39883728827598325,
+            "mobilenet_v2_temporal3": 0.40645939643887374
+          },
+          "plot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\kunmingr2__2__2\\regression_compare.png",
+          "json": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\kunmingr2__2__2\\regression_compare.json"
+        },
+        {
+          "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\1",
+          "relativeFolder": "kunmingr2/3/1",
+          "numImages": 161,
+          "mae": {
+            "legacy": 1.431779743302683,
+            "mobilenet_v2_single": 0.39228230385729884,
+            "mobilenet_v2_temporal3": 0.34712848894566484
+          },
+          "plot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\kunmingr2__3__1\\regression_compare.png",
+          "json": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\kunmingr2__3__1\\regression_compare.json"
+        },
+        {
+          "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2",
+          "relativeFolder": "kunmingr2/3/2",
+          "numImages": 159,
+          "mae": {
+            "legacy": 1.5656772469424605,
+            "mobilenet_v2_single": 0.5755063761452084,
+            "mobilenet_v2_temporal3": 0.4160467915122613
+          },
+          "plot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\kunmingr2__3__2\\regression_compare.png",
+          "json": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\kunmingr2__3__2\\regression_compare.json"
+        },
+        {
+          "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\4\\1",
+          "relativeFolder": "kunmingr2/4/1",
+          "numImages": 83,
+          "mae": {
+            "legacy": 1.2157784347422151,
+            "mobilenet_v2_single": 0.7029180003688995,
+            "mobilenet_v2_temporal3": 0.5688798838770532
+          },
+          "plot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\kunmingr2__4__1\\regression_compare.png",
+          "json": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\kunmingr2__4__1\\regression_compare.json"
+        },
+        {
+          "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\4\\2",
+          "relativeFolder": "kunmingr2/4/2",
+          "numImages": 83,
+          "mae": {
+            "legacy": 1.1760062520371861,
+            "mobilenet_v2_single": 0.6361555850402418,
+            "mobilenet_v2_temporal3": 0.5930619677941482
+          },
+          "plot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\kunmingr2__4__2\\regression_compare.png",
+          "json": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\kunmingr2__4__2\\regression_compare.json"
+        },
+        {
+          "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\5\\1",
+          "relativeFolder": "kunmingr2/5/1",
+          "numImages": 97,
+          "mae": {
+            "legacy": 0.917468138187202,
+            "mobilenet_v2_single": 0.3460564264281432,
+            "mobilenet_v2_temporal3": 0.6067525340380128
+          },
+          "plot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\kunmingr2__5__1\\regression_compare.png",
+          "json": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\kunmingr2__5__1\\regression_compare.json"
+        },
+        {
+          "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\5\\2",
+          "relativeFolder": "kunmingr2/5/2",
+          "numImages": 98,
+          "mae": {
+            "legacy": 0.9849753119264331,
+            "mobilenet_v2_single": 0.5071111631904329,
+            "mobilenet_v2_temporal3": 0.5785468002837532
+          },
+          "plot": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\kunmingr2__5__2\\regression_compare.png",
+          "json": "E:\\桌面\\项目\\training_runs\\mobilenet_v2_temporal3_adapter_proxy_existing_source_20260419_002245\\compare_temporal3_vs_baselines_20260419_01\\kunmingr2\\kunmingr2__5__2\\regression_compare.json"
+        }
+      ]
+    }
+  ]
+}

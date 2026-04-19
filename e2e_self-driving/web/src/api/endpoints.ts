@@ -7,6 +7,9 @@ export const paths = {
   login: "/auth/login",
   me: "/auth/me",
 
+  projects: "/projects",
+  project: (id: string) => `/projects/${id}`,
+
   datasets: "/datasets",
   datasetUpload: "/datasets/upload",
   dataset: (id: string) => `/datasets/${id}`,

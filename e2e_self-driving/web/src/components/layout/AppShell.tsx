@@ -1,13 +1,11 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LogOut, LayoutDashboard, Upload, PlayCircle, Cpu } from "lucide-react";
+import { LogOut, FolderTree, Cpu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { to: "/", label: "训练任务", icon: LayoutDashboard },
-  { to: "/datasets", label: "数据集", icon: Upload },
-  { to: "/train/new", label: "新建训练", icon: PlayCircle },
+  { to: "/", label: "项目", icon: FolderTree },
 ];
 
 export function AppShell() {

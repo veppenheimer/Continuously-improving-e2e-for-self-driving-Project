@@ -1,0 +1,31 @@
+{
+  "requestedEpochs": 100,
+  "completedEpochs": 36,
+  "bestEpoch": 24,
+  "stoppedEpoch": 36,
+  "earlyStopped": true,
+  "modelSelectionMetric": "val_stress_mae",
+  "usePretrained": true,
+  "pretrainedLoaded": true,
+  "freezeBackboneEpochs": 5,
+  "preprocess": {
+    "colorSpace": "hsv",
+    "inputSize": [
+      120,
+      160
+    ],
+    "useRoi": false
+  },
+  "finalTrainLoss": 0.66430462110238,
+  "finalValLoss": 0.6194414697387666,
+  "steeringError": 0.13553566718563237,
+  "finalTrainAcc": 0.9426229508196722,
+  "finalValAcc": 0.9272030651340997,
+  "finalTrainAngleMAE": 0.08839747122504184,
+  "finalValAngleMAE": 0.09894524940639249,
+  "finalValStressAngleMAE": 0.1576053243526525,
+  "finalTestLoss": 0.704051842216317,
+  "finalTestAcc": 0.9083969465648855,
+  "finalTestAngleMAE": 0.11206118762137667,
+  "usedDedicatedTestSplit": true
+}

@@ -1,0 +1,43 @@
+{
+  "runDir": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800",
+  "outputRoot": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405",
+  "testNumber": null,
+  "fullImage": true,
+  "roiEnabled": false,
+  "records": [
+    {
+      "name": "data1",
+      "kind": "flat",
+      "path": "E:\\桌面\\data1",
+      "outputDir": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\data1",
+      "json": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\data1\\joint_dataset_compare.json",
+      "plot": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\data1\\joint_dataset_compare.png",
+      "log": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\data1\\terminal.log",
+      "returncode": 0,
+      "numImages": 1743,
+      "mae": {
+        "Net_class": 0.26755935666827135,
+        "Net_improve": 0.26961503155479055,
+        "Net_regression": 0.21980149244184952
+      }
+    },
+    {
+      "name": "kunmingr2",
+      "kind": "recursive",
+      "path": "E:\\桌面\\kunmingr2",
+      "outputDir": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2",
+      "index": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\recursive_joint_index.json",
+      "log": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\\kunmingr2\\terminal.log",
+      "returncode": 0,
+      "numFolders": 10,
+      "successfulFolders": 10,
+      "failedFolders": 0,
+      "numImages": 1078,
+      "mae": {
+        "Net_class": 1.229753959535641,
+        "Net_improve": 1.1747196660482377,
+        "Net_regression": 0.7394516542914847
+      }
+    }
+  ]
+}

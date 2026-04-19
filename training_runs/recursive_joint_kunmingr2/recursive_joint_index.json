@@ -1,0 +1,138 @@
+{
+  "root": "E:\\桌面\\kunmingr2",
+  "outputDir": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2",
+  "numFolders": 10,
+  "testNumber": null,
+  "roiEnabled": true,
+  "roiBottomRatio": 0.6,
+  "records": [
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\1\\1",
+      "plot": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__1__1.png",
+      "json": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__1__1.json",
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"E:\\����\\��Ŀ\\joint_infer_compare.py\", line 155, in _parse_angle_from_name\n    return float(tail)\nValueError: could not convert string to float: 'compare'\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"E:\\����\\��Ŀ\\joint_infer_dataset_compare.py\", line 197, in <module>\n    main()\n    ~~~~^^\n  File \"E:\\����\\��Ŀ\\joint_infer_dataset_compare.py\", line 117, in main\n    gt_angle = _parse_angle_from_name(image_path)\n  File \"E:\\����\\��Ŀ\\joint_infer_compare.py\", line 157, in _parse_angle_from_name\n    raise ValueError(\"failed to parse angle from filename; pass --angle explicitly\") from exc\nValueError: failed to parse angle from filename; pass --angle explicitly\n"
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\1\\2",
+      "plot": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__1__2.png",
+      "json": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__1__2.json",
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"E:\\����\\��Ŀ\\joint_infer_compare.py\", line 155, in _parse_angle_from_name\n    return float(tail)\nValueError: could not convert string to float: 'compare'\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"E:\\����\\��Ŀ\\joint_infer_dataset_compare.py\", line 197, in <module>\n    main()\n    ~~~~^^\n  File \"E:\\����\\��Ŀ\\joint_infer_dataset_compare.py\", line 117, in main\n    gt_angle = _parse_angle_from_name(image_path)\n  File \"E:\\����\\��Ŀ\\joint_infer_compare.py\", line 157, in _parse_angle_from_name\n    raise ValueError(\"failed to parse angle from filename; pass --angle explicitly\") from exc\nValueError: failed to parse angle from filename; pass --angle explicitly\n"
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\1",
+      "plot": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__2__1.png",
+      "json": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__2__1.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\2\\1\nrun_dir: E:\\����\\��Ŀ\\training_runs\\real_data_20260417_213537\ndevice: cuda\ntested_images: 91\nroi_enabled: True\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__2__1.png\njson: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__2__1.json\n\nmodel           mae\n--------------- ------------\nNet_class           0.404983\nNet_improve         0.455563\nNet_regression      0.336169\n",
+      "stderr": "",
+      "mae": {
+        "Net_class": 0.4049834744168302,
+        "Net_improve": 0.4555626373626373,
+        "Net_regression": 0.3361693912629243
+      },
+      "numImages": 91
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2",
+      "plot": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__2__2.png",
+      "json": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__2__2.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\2\\2\nrun_dir: E:\\����\\��Ŀ\\training_runs\\real_data_20260417_213537\ndevice: cuda\ntested_images: 91\nroi_enabled: True\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__2__2.png\njson: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__2__2.json\n\nmodel           mae\n--------------- ------------\nNet_class           0.513178\nNet_improve         0.359079\nNet_regression      0.398917\n",
+      "stderr": "",
+      "mae": {
+        "Net_class": 0.5131777283970614,
+        "Net_improve": 0.3590791208791208,
+        "Net_regression": 0.3989166929013127
+      },
+      "numImages": 91
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\1",
+      "plot": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__3__1.png",
+      "json": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__3__1.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\3\\1\nrun_dir: E:\\����\\��Ŀ\\training_runs\\real_data_20260417_213537\ndevice: cuda\ntested_images: 161\nroi_enabled: True\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__3__1.png\njson: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__3__1.json\n\nmodel           mae\n--------------- ------------\nNet_class           0.222681\nNet_improve         0.440255\nNet_regression      0.325460\n",
+      "stderr": "",
+      "mae": {
+        "Net_class": 0.22268131124737867,
+        "Net_improve": 0.44025465838509314,
+        "Net_regression": 0.3254603321219083
+      },
+      "numImages": 161
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2",
+      "plot": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__3__2.png",
+      "json": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__3__2.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\3\\2\nrun_dir: E:\\����\\��Ŀ\\training_runs\\real_data_20260417_213537\ndevice: cuda\ntested_images: 159\nroi_enabled: True\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__3__2.png\njson: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__3__2.json\n\nmodel           mae\n--------------- ------------\nNet_class           0.326228\nNet_improve         0.471704\nNet_regression      0.549289\n",
+      "stderr": "",
+      "mae": {
+        "Net_class": 0.32622770120099676,
+        "Net_improve": 0.4717044025157232,
+        "Net_regression": 0.5492892153840395
+      },
+      "numImages": 159
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\4\\1",
+      "plot": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__4__1.png",
+      "json": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__4__1.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\4\\1\nrun_dir: E:\\����\\��Ŀ\\training_runs\\real_data_20260417_213537\ndevice: cuda\ntested_images: 83\nroi_enabled: True\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__4__1.png\njson: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__4__1.json\n\nmodel           mae\n--------------- ------------\nNet_class           0.582829\nNet_improve         1.260635\nNet_regression      0.838261\n",
+      "stderr": "",
+      "mae": {
+        "Net_class": 0.5828293053058256,
+        "Net_improve": 1.2606349397590362,
+        "Net_regression": 0.8382614866118833
+      },
+      "numImages": 83
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\4\\2",
+      "plot": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__4__2.png",
+      "json": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__4__2.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\4\\2\nrun_dir: E:\\����\\��Ŀ\\training_runs\\real_data_20260417_213537\ndevice: cuda\ntested_images: 83\nroi_enabled: True\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__4__2.png\njson: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__4__2.json\n\nmodel           mae\n--------------- ------------\nNet_class           0.565226\nNet_improve         1.339931\nNet_regression      0.875071\n",
+      "stderr": "",
+      "mae": {
+        "Net_class": 0.5652262752234577,
+        "Net_improve": 1.3399313253012048,
+        "Net_regression": 0.8750713412916803
+      },
+      "numImages": 83
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\5\\1",
+      "plot": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__5__1.png",
+      "json": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__5__1.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\5\\1\nrun_dir: E:\\����\\��Ŀ\\training_runs\\real_data_20260417_213537\ndevice: cuda\ntested_images: 97\nroi_enabled: True\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__5__1.png\njson: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__5__1.json\n\nmodel           mae\n--------------- ------------\nNet_class           1.090455\nNet_improve         0.669804\nNet_regression      1.089571\n",
+      "stderr": "",
+      "mae": {
+        "Net_class": 1.0904549101026075,
+        "Net_improve": 0.6698041237113402,
+        "Net_regression": 1.0895713632229675
+      },
+      "numImages": 97
+    },
+    {
+      "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\5\\2",
+      "plot": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__5__2.png",
+      "json": "E:\\桌面\\项目\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__5__2.json",
+      "returncode": 0,
+      "stdout": "folder: E:\\����\\kunmingr2\\kunmingr2\\5\\2\nrun_dir: E:\\����\\��Ŀ\\training_runs\\real_data_20260417_213537\ndevice: cuda\ntested_images: 98\nroi_enabled: True\nroi_bottom_ratio: 0.600\nplot: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__5__2.png\njson: E:\\����\\��Ŀ\\training_runs\\recursive_joint_kunmingr2\\kunmingr2__5__2.json\n\nmodel           mae\n--------------- ------------\nNet_class           1.018364\nNet_improve         0.713898\nNet_regression      1.061936\n",
+      "stderr": "",
+      "mae": {
+        "Net_class": 1.0183640666434692,
+        "Net_improve": 0.7138979591836734,
+        "Net_regression": 1.0619363744715038
+      },
+      "numImages": 98
+    }
+  ]
+}

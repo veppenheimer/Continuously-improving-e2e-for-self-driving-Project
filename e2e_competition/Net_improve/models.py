@@ -1,27 +1,27 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8 -*-
+﻿#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-import torch
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
 import torch.nn as nn
 
+CURRENT_DIR = Path(__file__).resolve().parent
+REPO_ROOT = CURRENT_DIR.parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from steering_models import ImproveClassifierNet, load_state_dict_flexible
 from steering_config import NUM_CLASSES
 
 
 class DSConvBlock(nn.Module):
-    """Depthwise + pointwise block, fewer parameters."""
-
     def __init__(self, in_channels, out_channels, stride=1, dropout=0.0):
         super().__init__()
         self.block = nn.Sequential(
-            nn.Conv2d(
-                in_channels,
-                in_channels,
-                kernel_size=3,
-                stride=stride,
-                padding=1,
-                groups=in_channels,
-                bias=False,
-            ),
+            nn.Conv2d(in_channels, in_channels, kernel_size=3, stride=stride, padding=1, groups=in_channels, bias=False),
             nn.BatchNorm2d(in_channels),
             nn.GELU(),
             nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False),
@@ -34,11 +34,7 @@ class DSConvBlock(nn.Module):
         return self.block(x)
 
 
-class AutoDriveNetImprove(nn.Module):
-    """
-    轻量化端到端自动驾驶模型（九类转向角分类）。
-    """
-
+class AutoDriveLegacyNetImprove(nn.Module):
     def __init__(self):
         super().__init__()
         self.stem = nn.Sequential(
@@ -60,7 +56,6 @@ class AutoDriveNetImprove(nn.Module):
             nn.Dropout(p=0.35),
             nn.Linear(32, NUM_CLASSES),
         )
-
         self._init_weights()
 
     def _init_weights(self):
@@ -82,10 +77,19 @@ class AutoDriveNetImprove(nn.Module):
         return self.head(x)
 
 
+class AutoDriveNetImprove(ImproveClassifierNet):
+    def __init__(self, *, use_pretrained: bool = True):
+        super().__init__(num_classes=NUM_CLASSES, use_pretrained=use_pretrained)
+
+
+def build_model_for_checkpoint(state_dict):
+    model = AutoDriveNetImprove()
+    if load_state_dict_flexible(model, state_dict):
+        return model
+    legacy = AutoDriveLegacyNetImprove()
+    legacy.load_state_dict(state_dict, strict=True)
+    return legacy
+
+
 def count_trainable_params(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
-
-
-if __name__ == "__main__":
-    base = AutoDriveNetImprove()
-    print("Trainable params:", count_trainable_params(base))

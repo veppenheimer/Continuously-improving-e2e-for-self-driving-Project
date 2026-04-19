@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import threading
 import queue
@@ -6,14 +6,23 @@ import rospy
 from geometry_msgs.msg import Twist
 from yolo_msgs.msg import YoloSign
 import cv2, numpy as np, tensorrt as trt
+import sys
+from pathlib import Path
 import pycuda.driver as cuda
 import pycuda.autoinit
 from collections import deque
 
-# ---------- 配置 ----------
+CURRENT_DIR = Path(__file__).resolve().parent
+REPO_ROOT = CURRENT_DIR.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from steering_preprocess import DEFAULT_PREPROCESS_CONFIG, preprocess_bgr_to_chw_float
+
+# ---------- 閰嶇疆 ----------
 ENGINE_PATH  = rospy.get_param('~engine_path', './ve_simplified_fp16.engine')
 CAMERA_INDEX = rospy.get_param('~camera_index', 1)
-INPUT_SHAPE  = (1, 3, 120, 160)
+INPUT_SHAPE  = (1, 3, DEFAULT_PREPROCESS_CONFIG.input_size[0], DEFAULT_PREPROCESS_CONFIG.input_size[1])
 # ---------------------------
 
 class CameraCapture(threading.Thread):
@@ -68,13 +77,13 @@ class AsyncPublisher(threading.Thread):
         self.running = False
 
 def wait_for_user_start():
-    rospy.loginfo("模型加载完毕。请在键盘上按 'r' 键开始运动……")
+    rospy.loginfo("Model loaded. Press r on the keyboard to start.")
     try:
         user_input = input("Press 'r' to start: ")
         while user_input.strip().lower() != 'r':
             user_input = input("Invalid input. Press 'r' to start: ")
     except EOFError:
-        rospy.logwarn("无法读取输入，直接开始（可能是在后台运行）")
+        rospy.logwarn("Failed to read keyboard input; starting immediately.")
 
 class MotionController:
     def __init__(self):
@@ -136,7 +145,7 @@ class MotionController:
         self.init_start_time = None
         self.initializing = True
 
-        # 中断动作状态
+        # 涓柇鍔ㄤ綔鐘舵€?
         self.interrupted_action = None
         self.interrupted_sign = None
         self.interrupted_duration = None
@@ -187,10 +196,8 @@ class MotionController:
         self.sign_queue.append(msg.sign_type)
 
     def preprocess(self, frame):
-        img = cv2.resize(frame, (INPUT_SHAPE[3], INPUT_SHAPE[2]))
-        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-        arr = hsv.astype(np.float32) * (1.0/255.0)
-        self.host_in[:] = arr.transpose(2,0,1)[None,...]
+        arr = preprocess_bgr_to_chw_float(frame, config=DEFAULT_PREPROCESS_CONFIG)
+        self.host_in[:] = arr[None, ...]
 
     def infer_trt(self):
         self.context.execute_async_v2([int(self.devptr_in), int(self.devptr_out)], self.stream.handle)
@@ -352,7 +359,7 @@ class MotionController:
                 twist.linear.x = self.default_linear_speed
                 twist.angular.z = ang_z
             except Exception as e:
-                rospy.logerr("推理或发布失败: %s", e)
+                rospy.logerr("鎺ㄧ悊鎴栧彂甯冨け璐? %s", e)
                 twist.linear.x = twist.angular.z = 0.0
             self.async_pub.send(twist)
             self.rate.sleep()
@@ -370,3 +377,7 @@ if __name__ == '__main__':
         pass
     finally:
         node.shutdown()
+
+
+
+

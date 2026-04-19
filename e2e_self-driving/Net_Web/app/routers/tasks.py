@@ -1,4 +1,4 @@
-"""训练任务：创建、进度、控制、结果、推理、下载、WebSocket。"""
+﻿"""Training task routes: create, inspect, progress, inference, download, and websocket updates."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ import json
 import shutil
 import threading
 import importlib.util
+import sys
 from pathlib import Path
 
 import torch
@@ -126,19 +127,48 @@ def _progress_for_task(task_id: str, fb: dict) -> dict:
 _STEERING_CLASSES = [1.72, 1.64, 1.5, 0.0, -1.5, -1.56, -1.58, -1.6, -1.62]
 
 
-def _load_comp_model(model_py: Path, class_name: str, ckpt: Path, device: torch.device):
-    spec = importlib.util.spec_from_file_location(f"comp_{class_name}_{ckpt.stem}", str(model_py))
+def _load_comp_module(module_path: Path, module_key: str):
+    spec = importlib.util.spec_from_file_location(module_key, str(module_path))
     if spec is None or spec.loader is None:
-        raise RuntimeError(f"无法加载模型定义: {model_py}")
+        raise RuntimeError(f"failed to load Python module: {module_path}")
     mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    cls = getattr(mod, class_name)
-    model = cls().to(device)
+    module_dir = str(module_path.parent)
+    added = False
+    if module_dir not in sys.path:
+        sys.path.insert(0, module_dir)
+        added = True
+    try:
+        spec.loader.exec_module(mod)
+    finally:
+        if added:
+            try:
+                sys.path.remove(module_dir)
+            except ValueError:
+                pass
+    return mod
+
+
+def _load_comp_model(model_py: Path, class_name: str, ckpt: Path, device: torch.device):
+    mod = _load_comp_module(model_py, f"comp_{class_name}_{ckpt.stem}")
     data = torch.load(str(ckpt), map_location=device)
     state = data.get("model", data) if isinstance(data, dict) else data
-    model.load_state_dict(state)
+    builder = getattr(mod, "build_model_for_checkpoint", None)
+    if callable(builder):
+        model = builder(state).to(device)
+    else:
+        cls = getattr(mod, class_name)
+        model = cls().to(device)
+        model.load_state_dict(state)
     model.eval()
     return model
+
+
+def _load_comp_decode(module_dir: Path, ckpt: Path):
+    steering_mod = _load_comp_module(module_dir / "steering_config.py", f"comp_decode_{ckpt.stem}")
+    decode_output = getattr(steering_mod, "decode_output", None)
+    if decode_output is None:
+        raise RuntimeError(f"failed to load decode_output: {module_dir / 'steering_config.py'}")
+    return decode_output
 
 
 def _predict_comp_steering(model: torch.nn.Module, bgr, device: torch.device) -> float:
@@ -150,9 +180,19 @@ def _predict_comp_steering(model: torch.nn.Module, bgr, device: torch.device) ->
     return float(_STEERING_CLASSES[cls])
 
 
+def _predict_comp_class_steering(model: torch.nn.Module, decode_output, bgr, device: torch.device) -> float:
+    x = infer_svc._bgr_to_tensor(bgr).to(device)  # noqa: SLF001
+    with torch.no_grad():
+        output = model(x)
+        angle = decode_output(output)
+    if torch.is_tensor(angle):
+        return float(angle.reshape(-1)[0].item())
+    return float(angle)
+
+
 @router.get("/tasks", response_model=list[TrainingTaskSummary])
-def list_tasks(user: CurrentUser):
-    rows = db.list_tasks_for_user(user["id"])
+def list_tasks(user: CurrentUser, project_id: str | None = Query(default=None, alias="projectId")):
+    rows = db.list_tasks_for_user(user["id"], project_id)
     return [TrainingTaskSummary(**db.task_row_to_summary(r)) for r in rows]
 
 
@@ -166,21 +206,26 @@ def get_task_detail(task_id: str, user: CurrentUser):
 
 @router.post("/tasks", response_model=TrainingTaskSummary)
 def create_task(body: CreateTaskBody, user: CurrentUser):
-    ds = db.get_dataset(body.dataset_id, user["id"])
+    project = db.get_project(body.project_id, user["id"])
+    if project is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="项目不存在")
+
+    ds = db.get_dataset(body.dataset_id, user["id"], body.project_id)
     if ds is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="数据集不存在")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="数据集不存在或不属于该项目")
     ds_b = None
     if body.domain_augmentation:
         if not body.domain_b_dataset_id:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="开启域增强时必须选择 B 域数据集")
-        ds_b = db.get_dataset(body.domain_b_dataset_id, user["id"])
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="寮€鍚煙澧炲己鏃跺繀椤婚€夋嫨 B 鍩熸暟鎹泦")
+        ds_b = db.get_dataset(body.domain_b_dataset_id, user["id"], body.project_id)
         if ds_b is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="B 域数据集不存在")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="B 鍩熸暟鎹泦涓嶅瓨鍦ㄦ垨涓嶅睘浜庤椤圭洰")
         if body.domain_b_dataset_id == body.dataset_id:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A 域和 B 域数据集不能相同")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A 鍩熷拰 B 鍩熸暟鎹泦涓嶈兘鐩稿悓")
 
     tid = db.insert_task(
         user["id"],
+        body.project_id,
         body.dataset_id,
         body.learning_rate,
         body.batch_size,
@@ -193,6 +238,8 @@ def create_task(body: CreateTaskBody, user: CurrentUser):
             "epochs": body.epochs,
             "datasetId": body.dataset_id,
             "datasetName": ds["name"],
+            "projectId": body.project_id,
+            "projectName": project["name"],
             "domainAugmentation": body.domain_augmentation,
             "domainBDatasetId": body.domain_b_dataset_id,
             "domainBDatasetName": (ds_b["name"] if ds_b is not None else None),
@@ -277,7 +324,7 @@ def pause_or_resume(task_id: str, user: CurrentUser):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="任务不存在")
     ctrl = state.get_controls(task_id)
     if ctrl is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="任务当前不可暂停（未在运行或已结束）")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="浠诲姟褰撳墠涓嶅彲鏆傚仠锛堟湭鍦ㄨ繍琛屾垨宸茬粨鏉燂級")
     st = row["status"]
     if st == "running":
         ctrl.pause.set()
@@ -286,7 +333,7 @@ def pause_or_resume(task_id: str, user: CurrentUser):
         ctrl.pause.clear()
         db.update_task_status(task_id, user["id"], "running", None)
     else:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="当前状态不支持暂停/继续")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="褰撳墠鐘舵€佷笉鏀寔鏆傚仠/缁х画")
     return None
 
 
@@ -297,7 +344,7 @@ def stop_task(task_id: str, user: CurrentUser):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="任务不存在")
     ctrl = state.get_controls(task_id)
     if ctrl is None:
-        db.update_task_status(task_id, user["id"], "stopped", "用户终止")
+        db.update_task_status(task_id, user["id"], "stopped", "鐢ㄦ埛缁堟")
         return None
     if row["status"] in ("completed", "failed", "stopped"):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="任务已结束")
@@ -311,9 +358,9 @@ def get_results(task_id: str, user: CurrentUser):
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="任务不存在")
     if row["status"] != "completed":
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="任务尚未完成")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="浠诲姟灏氭湭瀹屾垚")
     if not row["result_json"]:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="无结果数据")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="没有结果数据")
     data = json.loads(row["result_json"])
     params = {}
     try:
@@ -412,7 +459,7 @@ async def infer_compare(task_id: str, user: CurrentUser, file: UploadFile = File
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="任务不存在")
     if row["status"] != "completed":
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="请先完成训练")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="璇峰厛瀹屾垚璁粌")
     if not row["baseline_ckpt"]:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="未找到基准模型")
     data = await file.read()
@@ -441,8 +488,10 @@ async def infer_compare(task_id: str, user: CurrentUser, file: UploadFile = File
     lite_ckpt = task_art / "competition_lite" / "ve2_competition_lite.pth"
     try:
         if class_ckpt.is_file():
-            m = _load_comp_model(comp_root / "Net_class" / "models.py", "AutoDriveNet", class_ckpt, device)
-            comp_class_angle = _predict_comp_steering(m, bgr, device)
+            class_dir = comp_root / "Net_class"
+            m = _load_comp_model(class_dir / "models.py", "AutoDriveNet", class_ckpt, device)
+            decode_output = _load_comp_decode(class_dir, class_ckpt)
+            comp_class_angle = _predict_comp_class_steering(m, decode_output, bgr, device)
     except Exception:
         comp_class_angle = None
     try:
@@ -464,7 +513,7 @@ async def infer_compare(task_id: str, user: CurrentUser, file: UploadFile = File
 def download_model(
     task_id: str,
     user: CurrentUser,
-    model: str = Query(..., description="baseline 或 augmented"),
+    model: str = Query(..., description="baseline 鎴?augmented"),
 ):
     row = db.get_task(task_id, user["id"])
     if row is None:
@@ -472,10 +521,10 @@ def download_model(
     if row["status"] != "completed":
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="任务未完成")
     if model not in ("baseline", "augmented"):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="model 须为 baseline 或 augmented")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="model 椤讳负 baseline 鎴?augmented")
     path_str = row["baseline_ckpt"] if model == "baseline" else row["augmented_ckpt"]
     if not path_str:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="该模型不存在")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="璇ユā鍨嬩笉瀛樺湪")
     path = Path(path_str)
     if not path.is_file():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="文件已丢失")
@@ -519,7 +568,7 @@ def list_domain_aug_pairs(task_id: str, user: CurrentUser):
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="任务不存在")
     if not bool(row["domain_augmentation"]):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="该任务未开启域增强")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="璇ヤ换鍔℃湭寮€鍚煙澧炲己")
     pairs_path = settings.data_dir / "tasks" / task_id / "domain_aug_pairs.json"
     if not pairs_path.is_file():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="暂无域增强对比数据")
@@ -538,7 +587,7 @@ def get_domain_aug_image(
     task_id: str,
     user: CurrentUser,
     index: int = Query(..., ge=0),
-    kind: str = Query(..., description="a 或 c"),
+    kind: str = Query(..., description="a 鎴?c"),
 ):
     row = db.get_task(task_id, user["id"])
     if row is None:
@@ -551,7 +600,7 @@ def get_domain_aug_image(
     if target is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="对比索引不存在")
     if kind not in ("a", "c"):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="kind 必须为 a 或 c")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="kind 蹇呴』涓?a 鎴?c")
     path_key = "aPath" if kind == "a" else "cPath"
     name_key = "aName" if kind == "a" else "cName"
     p = Path(str(target[path_key]))
@@ -559,3 +608,5 @@ def get_domain_aug_image(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="图像文件不存在")
     media = "image/png" if p.suffix.lower() == ".png" else "image/jpeg"
     return FileResponse(p, media_type=media, filename=str(target[name_key]))
+
+

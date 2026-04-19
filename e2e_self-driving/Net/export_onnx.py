@@ -1,65 +1,55 @@
-import cv2
+﻿#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""Export regression checkpoint to ONNX using checkpoint preprocess metadata."""
+
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
 import torch
-import torch.onnx
-import onnx
-from models import AutoDriveNet
 
-print("🚀 代码开始运行...")
+from models import build_model_for_checkpoint
+from steering_preprocess import DEFAULT_PREPROCESS_CONFIG, preprocess_config_from_dict
 
-# 设置设备
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"✅ 设备设置完成: {device}")
 
-# 加载训练好的 PyTorch 模型
-checkpoint_path = "./ve.pth"
-print(f"🔍 正在加载模型: {checkpoint_path}")
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Export a regression checkpoint to ONNX.")
+    parser.add_argument("--ckpt", required=True)
+    parser.add_argument("--out", required=True)
+    parser.add_argument("--opset", type=int, default=13)
+    args = parser.parse_args()
 
-try:
-    checkpoint = torch.load(checkpoint_path, map_location=device)
-    model = AutoDriveNet().to(device)
-    model.load_state_dict(checkpoint['model'], strict=False)
+    ckpt_path = Path(args.ckpt).expanduser().resolve()
+    out_path = Path(args.out).expanduser().resolve()
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    checkpoint = torch.load(str(ckpt_path), map_location=device)
+    state = checkpoint.get("model", checkpoint)
+    preprocess = preprocess_config_from_dict(checkpoint.get("preprocess") if isinstance(checkpoint, dict) else None, fallback=DEFAULT_PREPROCESS_CONFIG)
+
+    model = build_model_for_checkpoint(state).to(device)
     model.eval()
-    print("✅ PyTorch 模型加载完成")
-except Exception as e:
-    print(f"❌ 加载模型失败: {e}")
-    exit()
 
-# 加载测试图像
-img_path = "./results/2.jpg"
-print(f"🔍 正在加载测试图片: {img_path}")
-
-try:
-    img = cv2.imread(img_path)
-    img = cv2.resize(img, (160, 120))  # 假设输入大小是 160x120
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    print("✅ 测试图片加载成功")
-except Exception as e:
-    print(f"❌ 读取图片失败: {e}")
-    exit()
-
-# 预处理
-try:
-    img = torch.from_numpy(img.copy()).float() / 255.0
-    img = img.permute(2, 0, 1).unsqueeze(0).to(device)  # (B, C, H, W)
-    print("✅ 预处理完成")
-except Exception as e:
-    print(f"❌ 预处理失败: {e}")
-    exit()
-
-# 导出 ONNX
-onnx_path = "results/ve.onnx"
-print(f"🔍 开始导出 ONNX: {onnx_path}")
-
-try:
+    height, width = preprocess.input_size
+    dummy = torch.randn(1, 3, height, width, device=device)
     torch.onnx.export(
-        model, img, onnx_path,
+        model,
+        dummy,
+        str(out_path),
         export_params=True,
-        opset_version=11,  # ONNX 版本
+        opset_version=args.opset,
         do_constant_folding=True,
-        input_names=['input'],
-        output_names=['output'],
-        dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}}
+        input_names=["input"],
+        output_names=["output"],
+        dynamic_axes={"input": {0: "batch_size"}, "output": {0: "batch_size"}},
     )
-    print(f"✅ ONNX 模型已保存到 {onnx_path}")
-except Exception as e:
-    print(f"❌ ONNX 导出失败: {e}")
+
+    print(f"ckpt: {ckpt_path}")
+    print(f"out: {out_path}")
+    print(f"preprocess: color_space={preprocess.color_space} input_size={preprocess.input_size} use_roi={preprocess.use_roi}")
+
+
+if __name__ == "__main__":
+    main()

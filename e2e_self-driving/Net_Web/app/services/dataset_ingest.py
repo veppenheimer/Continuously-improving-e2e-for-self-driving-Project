@@ -1,4 +1,4 @@
-"""ZIP 解压、文件名解析、划分 train/val 列表。"""
+"""ZIP 解压、文件名解析、划分 train/val/test 列表。"""
 
 from __future__ import annotations
 
@@ -49,15 +49,43 @@ def _collect_images(root: Path) -> list[tuple[Path, float]]:
     return found
 
 
+def _split_three_way(pairs: list[tuple[Path, float]], train_ratio: float, val_ratio: float):
+    n_total = len(pairs)
+    if n_total < 3:
+        raise ValueError("ZIP 内至少需要 3 张符合「序号_转向角.jpg」的图像，才能生成 train/val/test")
+
+    n_train = max(1, int(n_total * train_ratio))
+    n_val = max(1, int(n_total * val_ratio))
+    n_test = n_total - n_train - n_val
+
+    if n_test < 1:
+        deficit = 1 - n_test
+        take_from_train = min(deficit, max(0, n_train - 1))
+        n_train -= take_from_train
+        deficit -= take_from_train
+        take_from_val = min(deficit, max(0, n_val - 1))
+        n_val -= take_from_val
+        deficit -= take_from_val
+        if deficit > 0:
+            raise ValueError("数据量不足，无法同时保留 train/val/test 三个非空划分")
+        n_test = n_total - n_train - n_val
+
+    train_pairs = pairs[:n_train]
+    val_pairs = pairs[n_train:n_train + n_val]
+    test_pairs = pairs[n_train + n_val:]
+    return train_pairs, val_pairs, test_pairs
+
+
 async def ingest_zip_to_folder(
     base: Path,
     upload: UploadFile,
     display_name: str,
-    train_ratio: float = 0.8,
+    train_ratio: float = 0.7,
+    val_ratio: float = 0.15,
     seed: int = 256,
 ) -> dict:
     """
-    在 base 目录下写入 extracted/、train.txt、val.txt、upload.zip。
+    在 base 目录下写入 extracted/、train.txt、val.txt、test.txt、upload.zip。
     返回 { name, image_count, root_dir }。
     """
     base.mkdir(parents=True, exist_ok=True)
@@ -72,26 +100,18 @@ async def ingest_zip_to_folder(
         _safe_extract(zf, extracted)
 
     pairs = _collect_images(extracted)
-    if len(pairs) < 2:
-        raise ValueError("ZIP 内至少需要 2 张符合「序号_转向角.jpg」的图像")
-
     rnd = random.Random(seed)
     rnd.shuffle(pairs)
-    n_train = max(1, int(len(pairs) * train_ratio))
-    n_train = min(n_train, len(pairs) - 1)
-    train_pairs = pairs[:n_train]
-    val_pairs = pairs[n_train:]
-
-    train_txt = base / "train.txt"
-    val_txt = base / "val.txt"
+    train_pairs, val_pairs, test_pairs = _split_three_way(pairs, train_ratio=train_ratio, val_ratio=val_ratio)
 
     def write_list(path: Path, items: list[tuple[Path, float]]) -> None:
         with open(path, "w", encoding="utf-8") as f:
             for img_path, angle in items:
                 f.write(f"{os.fspath(img_path)} {angle}\n")
 
-    write_list(train_txt, train_pairs)
-    write_list(val_txt, val_pairs)
+    write_list(base / "train.txt", train_pairs)
+    write_list(base / "val.txt", val_pairs)
+    write_list(base / "test.txt", test_pairs)
 
     name = display_name.strip() or raw_name.rsplit(".", 1)[0]
     return {

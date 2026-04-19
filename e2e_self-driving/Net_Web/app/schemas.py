@@ -91,6 +91,14 @@ class ModelMetrics(BaseModel):
     steering_error: float = Field(serialization_alias="steeringError")
     final_train_acc: Optional[float] = Field(default=None, serialization_alias="finalTrainAcc")
     final_val_acc: Optional[float] = Field(default=None, serialization_alias="finalValAcc")
+    requested_epochs: Optional[int] = Field(default=None, serialization_alias="requestedEpochs")
+    completed_epochs: Optional[int] = Field(default=None, serialization_alias="completedEpochs")
+    best_epoch: Optional[int] = Field(default=None, serialization_alias="bestEpoch")
+    stopped_epoch: Optional[int] = Field(default=None, serialization_alias="stoppedEpoch")
+    early_stopped: Optional[bool] = Field(default=None, serialization_alias="earlyStopped")
+    best_val_loss: Optional[float] = Field(default=None, serialization_alias="bestValLoss")
+    final_test_loss: Optional[float] = Field(default=None, serialization_alias="finalTestLoss")
+    used_dedicated_test_split: Optional[bool] = Field(default=None, serialization_alias="usedDedicatedTestSplit")
     note: Optional[str] = None
 
 
@@ -106,6 +114,7 @@ class TaskResultSummary(BaseModel):
 class CreateTaskBody(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
+    project_id: str = Field(alias="projectId")
     dataset_id: str = Field(alias="datasetId")
     learning_rate: float = Field(alias="learningRate", gt=0)
     batch_size: int = Field(alias="batchSize", ge=1)
@@ -129,6 +138,7 @@ class DatasetItemOut(BaseModel):
     model_config = ConfigDict(populate_by_name=True, serialize_by_alias=True)
 
     id: str
+    project_id: str = Field(serialization_alias="projectId")
     name: str
     image_count: Optional[int] = Field(default=None, serialization_alias="imageCount")
     created_at: str = Field(serialization_alias="createdAt")
@@ -138,12 +148,33 @@ class TrainingTaskSummary(BaseModel):
     model_config = ConfigDict(populate_by_name=True, serialize_by_alias=True)
 
     id: str
+    project_id: str = Field(serialization_alias="projectId")
     name: str
     status: str
     created_at: str = Field(serialization_alias="createdAt")
     domain_augmentation: bool = Field(serialization_alias="domainAugmentation")
     params: dict[str, Any]
     result_summary: Optional[dict[str, Any]] = Field(default=None, serialization_alias="resultSummary")
+
+
+class ProjectItemOut(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, serialize_by_alias=True)
+
+    id: str
+    name: str
+    created_at: str = Field(serialization_alias="createdAt")
+
+
+class CreateProjectBody(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    name: str = Field(min_length=1, max_length=128)
+
+
+class RenameProjectBody(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    name: str = Field(min_length=1, max_length=128)
 
 
 class CompareInferOut(BaseModel):

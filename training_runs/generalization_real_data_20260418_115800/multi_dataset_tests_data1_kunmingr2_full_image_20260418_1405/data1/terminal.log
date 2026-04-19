@@ -1,0 +1,18 @@
+E:\����\��Ŀ\scripts\joint_infer_dataset_compare.py:215: MatplotlibDeprecationWarning: The 'labels' parameter of boxplot() has been renamed 'tick_labels' since Matplotlib 3.9; support for the old name will be dropped in 3.11.
+  ax.boxplot([abs_errors[name] for name in model_names], labels=model_names, showfliers=False)
+folder: E:\����\data1
+run_dir: E:\����\��Ŀ\training_runs\generalization_real_data_20260418_115800
+device: cuda
+tested_images: 1743
+roi_enabled: False
+roi_bottom_ratio: 0.600
+plot: E:\����\��Ŀ\training_runs\generalization_real_data_20260418_115800\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\data1\joint_dataset_compare.png
+json: E:\����\��Ŀ\training_runs\generalization_real_data_20260418_115800\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\data1\joint_dataset_compare.json
+csv: E:\����\��Ŀ\training_runs\generalization_real_data_20260418_115800\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\data1\joint_dataset_compare.csv
+by_angle_csv: E:\����\��Ŀ\training_runs\generalization_real_data_20260418_115800\multi_dataset_tests_data1_kunmingr2_full_image_20260418_1405\data1\joint_dataset_compare_by_angle.csv
+
+model           mae
+--------------- ------------
+Net_class           0.267559
+Net_improve         0.269615
+Net_regression      0.219801

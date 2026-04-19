@@ -1,0 +1,37 @@
+{
+  "folder": "E:\\桌面\\tmp_joint_test",
+  "runDir": "E:\\桌面\\项目\\training_runs\\real_data_20260417_213537",
+  "numImages": 3,
+  "device": "cuda",
+  "mae": {
+    "Net_class": 0.019197335001081228,
+    "Net_improve": 0.0,
+    "Net_regression": 0.02504277726014455
+  },
+  "results": [
+    {
+      "index": 0,
+      "image": "E:\\桌面\\tmp_joint_test\\0_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -0.006975957658141851,
+      "Net_improve": 0.0,
+      "Net_regression": -0.010011076927185059
+    },
+    {
+      "index": 1,
+      "image": "E:\\桌面\\tmp_joint_test\\1_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -0.013716447167098522,
+      "Net_improve": 0.0,
+      "Net_regression": -0.018590673804283142
+    },
+    {
+      "index": 2,
+      "image": "E:\\桌面\\tmp_joint_test\\10_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -0.03689960017800331,
+      "Net_improve": 0.0,
+      "Net_regression": -0.046526581048965454
+    }
+  ]
+}

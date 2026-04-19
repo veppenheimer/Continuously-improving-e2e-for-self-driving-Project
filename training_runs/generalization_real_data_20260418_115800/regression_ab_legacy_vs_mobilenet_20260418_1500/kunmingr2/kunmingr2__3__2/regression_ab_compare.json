@@ -1,0 +1,1447 @@
+{
+  "name": "kunmingr2__3__2",
+  "kind": "flat",
+  "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2",
+  "numImages": 159,
+  "mae": {
+    "improved_mobilenet_aux": 0.5359476116573285,
+    "legacy_original_cnn": 1.5656772469424605
+  },
+  "json": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\regression_ab_legacy_vs_mobilenet_20260418_1500\\kunmingr2\\kunmingr2__3__2\\regression_ab_compare.json",
+  "csv": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\regression_ab_legacy_vs_mobilenet_20260418_1500\\kunmingr2\\kunmingr2__3__2\\regression_ab_compare.csv",
+  "angleCsv": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\regression_ab_legacy_vs_mobilenet_20260418_1500\\kunmingr2\\kunmingr2__3__2\\regression_ab_compare_by_angle.csv",
+  "plot": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800\\regression_ab_legacy_vs_mobilenet_20260418_1500\\kunmingr2\\kunmingr2__3__2\\regression_ab_compare.png",
+  "results": [
+    {
+      "index": 0,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\0_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.791964590549469,
+      "improved_mobilenet_aux_abs_error": 0.791964590549469,
+      "legacy_original_cnn": 1.1782068014144897,
+      "legacy_original_cnn_abs_error": 1.1782068014144897
+    },
+    {
+      "index": 1,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\1_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -1.0292046070098877,
+      "improved_mobilenet_aux_abs_error": 0.5317953929901122,
+      "legacy_original_cnn": 1.2165189981460571,
+      "legacy_original_cnn_abs_error": 2.777518998146057
+    },
+    {
+      "index": 2,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\2_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -1.1831440925598145,
+      "improved_mobilenet_aux_abs_error": 0.3778559074401855,
+      "legacy_original_cnn": 1.2452356815338135,
+      "legacy_original_cnn_abs_error": 2.8062356815338134
+    },
+    {
+      "index": 3,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\3_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -0.9002839922904968,
+      "improved_mobilenet_aux_abs_error": 0.6607160077095031,
+      "legacy_original_cnn": 1.0674490928649902,
+      "legacy_original_cnn_abs_error": 2.62844909286499
+    },
+    {
+      "index": 4,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\4_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -1.2460460662841797,
+      "improved_mobilenet_aux_abs_error": 0.31495393371582026,
+      "legacy_original_cnn": 0.7647120952606201,
+      "legacy_original_cnn_abs_error": 2.32571209526062
+    },
+    {
+      "index": 5,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\5_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -1.1860690116882324,
+      "improved_mobilenet_aux_abs_error": 0.3749309883117675,
+      "legacy_original_cnn": 0.11613160371780396,
+      "legacy_original_cnn_abs_error": 1.677131603717804
+    },
+    {
+      "index": 6,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\6_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -1.1471598148345947,
+      "improved_mobilenet_aux_abs_error": 0.4138401851654052,
+      "legacy_original_cnn": -0.3381393253803253,
+      "legacy_original_cnn_abs_error": 1.2228606746196746
+    },
+    {
+      "index": 7,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\7_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -1.2407989501953125,
+      "improved_mobilenet_aux_abs_error": 0.32020104980468744,
+      "legacy_original_cnn": -0.9609357118606567,
+      "legacy_original_cnn_abs_error": 0.6000642881393432
+    },
+    {
+      "index": 8,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\8_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -1.0345935821533203,
+      "improved_mobilenet_aux_abs_error": 0.5264064178466796,
+      "legacy_original_cnn": -1.0731396675109863,
+      "legacy_original_cnn_abs_error": 0.4878603324890136
+    },
+    {
+      "index": 9,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\9_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -1.0389735698699951,
+      "improved_mobilenet_aux_abs_error": 0.5220264301300048,
+      "legacy_original_cnn": -0.8651031255722046,
+      "legacy_original_cnn_abs_error": 0.6958968744277954
+    },
+    {
+      "index": 10,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\10_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -1.1773784160614014,
+      "improved_mobilenet_aux_abs_error": 0.3836215839385986,
+      "legacy_original_cnn": -0.5193302631378174,
+      "legacy_original_cnn_abs_error": 1.0416697368621826
+    },
+    {
+      "index": 11,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\11_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -0.7879785299301147,
+      "improved_mobilenet_aux_abs_error": 0.7730214700698852,
+      "legacy_original_cnn": 0.20022335648536682,
+      "legacy_original_cnn_abs_error": 1.7612233564853668
+    },
+    {
+      "index": 12,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\12_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -0.6055418252944946,
+      "improved_mobilenet_aux_abs_error": 0.9554581747055053,
+      "legacy_original_cnn": 0.554274320602417,
+      "legacy_original_cnn_abs_error": 2.115274320602417
+    },
+    {
+      "index": 13,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\13_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -0.5013859868049622,
+      "improved_mobilenet_aux_abs_error": 1.0596140131950378,
+      "legacy_original_cnn": 1.1611058712005615,
+      "legacy_original_cnn_abs_error": 2.7221058712005615
+    },
+    {
+      "index": 14,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\14_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -0.7445376515388489,
+      "improved_mobilenet_aux_abs_error": 0.8164623484611511,
+      "legacy_original_cnn": 1.4036412239074707,
+      "legacy_original_cnn_abs_error": 2.9646412239074706
+    },
+    {
+      "index": 15,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\15_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -1.2847468852996826,
+      "improved_mobilenet_aux_abs_error": 0.2762531147003173,
+      "legacy_original_cnn": 1.5852645635604858,
+      "legacy_original_cnn_abs_error": 3.146264563560486
+    },
+    {
+      "index": 16,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\16_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -1.3323321342468262,
+      "improved_mobilenet_aux_abs_error": 0.22866786575317377,
+      "legacy_original_cnn": 1.5930286645889282,
+      "legacy_original_cnn_abs_error": 3.154028664588928
+    },
+    {
+      "index": 17,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\17_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -1.1876130104064941,
+      "improved_mobilenet_aux_abs_error": 0.3733869895935058,
+      "legacy_original_cnn": 1.601029634475708,
+      "legacy_original_cnn_abs_error": 3.162029634475708
+    },
+    {
+      "index": 18,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\18_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -1.6717612743377686,
+      "improved_mobilenet_aux_abs_error": 0.11076127433776861,
+      "legacy_original_cnn": 1.613453984260559,
+      "legacy_original_cnn_abs_error": 3.174453984260559
+    },
+    {
+      "index": 19,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\19_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -1.4204540252685547,
+      "improved_mobilenet_aux_abs_error": 0.14054597473144526,
+      "legacy_original_cnn": 1.5944401025772095,
+      "legacy_original_cnn_abs_error": 3.1554401025772094
+    },
+    {
+      "index": 20,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\20_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -1.7304136753082275,
+      "improved_mobilenet_aux_abs_error": 0.1694136753082276,
+      "legacy_original_cnn": 1.5651935338974,
+      "legacy_original_cnn_abs_error": 3.1261935338974
+    },
+    {
+      "index": 21,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\21_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -1.3889968395233154,
+      "improved_mobilenet_aux_abs_error": 0.1720031604766845,
+      "legacy_original_cnn": 1.2873523235321045,
+      "legacy_original_cnn_abs_error": 2.8483523235321044
+    },
+    {
+      "index": 22,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\22_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -1.4713759422302246,
+      "improved_mobilenet_aux_abs_error": 0.08962405776977533,
+      "legacy_original_cnn": 1.0699952840805054,
+      "legacy_original_cnn_abs_error": 2.6309952840805053
+    },
+    {
+      "index": 23,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\23_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -1.3298535346984863,
+      "improved_mobilenet_aux_abs_error": 0.23114646530151362,
+      "legacy_original_cnn": 0.2290399670600891,
+      "legacy_original_cnn_abs_error": 1.790039967060089
+    },
+    {
+      "index": 24,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\24_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -1.1451358795166016,
+      "improved_mobilenet_aux_abs_error": 0.4158641204833984,
+      "legacy_original_cnn": -0.586078405380249,
+      "legacy_original_cnn_abs_error": 0.9749215946197509
+    },
+    {
+      "index": 25,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\25_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -1.518568754196167,
+      "improved_mobilenet_aux_abs_error": 0.04243124580383295,
+      "legacy_original_cnn": -1.5243173837661743,
+      "legacy_original_cnn_abs_error": 0.03668261623382563
+    },
+    {
+      "index": 26,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\26_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -0.5992238521575928,
+      "improved_mobilenet_aux_abs_error": 0.9617761478424072,
+      "legacy_original_cnn": -1.5734485387802124,
+      "legacy_original_cnn_abs_error": 0.01244853878021246
+    },
+    {
+      "index": 27,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\27_-1.5610.jpg",
+      "groundTruth": -1.561,
+      "improved_mobilenet_aux": -0.04884490370750427,
+      "improved_mobilenet_aux_abs_error": 1.5121550962924957,
+      "legacy_original_cnn": -1.4935613870620728,
+      "legacy_original_cnn_abs_error": 0.06743861293792719
+    },
+    {
+      "index": 28,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\28_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.3499754071235657,
+      "improved_mobilenet_aux_abs_error": 0.3499754071235657,
+      "legacy_original_cnn": -1.4560679197311401,
+      "legacy_original_cnn_abs_error": 1.4560679197311401
+    },
+    {
+      "index": 29,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\29_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.31636661291122437,
+      "improved_mobilenet_aux_abs_error": 0.31636661291122437,
+      "legacy_original_cnn": -1.4692524671554565,
+      "legacy_original_cnn_abs_error": 1.4692524671554565
+    },
+    {
+      "index": 30,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\30_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.5391983389854431,
+      "improved_mobilenet_aux_abs_error": 0.5391983389854431,
+      "legacy_original_cnn": -1.4778904914855957,
+      "legacy_original_cnn_abs_error": 1.4778904914855957
+    },
+    {
+      "index": 31,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\31_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.5091025233268738,
+      "improved_mobilenet_aux_abs_error": 0.5091025233268738,
+      "legacy_original_cnn": -1.4844776391983032,
+      "legacy_original_cnn_abs_error": 1.4844776391983032
+    },
+    {
+      "index": 32,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\32_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.7068579792976379,
+      "improved_mobilenet_aux_abs_error": 0.7068579792976379,
+      "legacy_original_cnn": -1.4834271669387817,
+      "legacy_original_cnn_abs_error": 1.4834271669387817
+    },
+    {
+      "index": 33,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\33_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.8135882616043091,
+      "improved_mobilenet_aux_abs_error": 0.8135882616043091,
+      "legacy_original_cnn": -1.5056722164154053,
+      "legacy_original_cnn_abs_error": 1.5056722164154053
+    },
+    {
+      "index": 34,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\34_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.7918391823768616,
+      "improved_mobilenet_aux_abs_error": 0.7918391823768616,
+      "legacy_original_cnn": -1.5025089979171753,
+      "legacy_original_cnn_abs_error": 1.5025089979171753
+    },
+    {
+      "index": 35,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\35_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.7630392909049988,
+      "improved_mobilenet_aux_abs_error": 0.7630392909049988,
+      "legacy_original_cnn": -1.503483772277832,
+      "legacy_original_cnn_abs_error": 1.503483772277832
+    },
+    {
+      "index": 36,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\36_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.9361298680305481,
+      "improved_mobilenet_aux_abs_error": 0.9361298680305481,
+      "legacy_original_cnn": -1.500949501991272,
+      "legacy_original_cnn_abs_error": 1.500949501991272
+    },
+    {
+      "index": 37,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\37_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -1.2839350700378418,
+      "improved_mobilenet_aux_abs_error": 1.2839350700378418,
+      "legacy_original_cnn": -1.4901612997055054,
+      "legacy_original_cnn_abs_error": 1.4901612997055054
+    },
+    {
+      "index": 38,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\38_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.8167068958282471,
+      "improved_mobilenet_aux_abs_error": 0.8167068958282471,
+      "legacy_original_cnn": -1.4697874784469604,
+      "legacy_original_cnn_abs_error": 1.4697874784469604
+    },
+    {
+      "index": 39,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\39_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -1.4338090419769287,
+      "improved_mobilenet_aux_abs_error": 1.4338090419769287,
+      "legacy_original_cnn": -1.463089108467102,
+      "legacy_original_cnn_abs_error": 1.463089108467102
+    },
+    {
+      "index": 40,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\40_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -1.5456140041351318,
+      "improved_mobilenet_aux_abs_error": 1.5456140041351318,
+      "legacy_original_cnn": -1.446274995803833,
+      "legacy_original_cnn_abs_error": 1.446274995803833
+    },
+    {
+      "index": 41,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\41_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -1.548210620880127,
+      "improved_mobilenet_aux_abs_error": 1.548210620880127,
+      "legacy_original_cnn": -1.4352726936340332,
+      "legacy_original_cnn_abs_error": 1.4352726936340332
+    },
+    {
+      "index": 42,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\42_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -1.5755653381347656,
+      "improved_mobilenet_aux_abs_error": 1.5755653381347656,
+      "legacy_original_cnn": -1.4001786708831787,
+      "legacy_original_cnn_abs_error": 1.4001786708831787
+    },
+    {
+      "index": 43,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\43_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -1.652034044265747,
+      "improved_mobilenet_aux_abs_error": 1.652034044265747,
+      "legacy_original_cnn": -1.331112027168274,
+      "legacy_original_cnn_abs_error": 1.331112027168274
+    },
+    {
+      "index": 44,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\44_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -1.529160976409912,
+      "improved_mobilenet_aux_abs_error": 1.529160976409912,
+      "legacy_original_cnn": -1.2645316123962402,
+      "legacy_original_cnn_abs_error": 1.2645316123962402
+    },
+    {
+      "index": 45,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\45_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -1.6525979042053223,
+      "improved_mobilenet_aux_abs_error": 1.6525979042053223,
+      "legacy_original_cnn": -1.0884202718734741,
+      "legacy_original_cnn_abs_error": 1.0884202718734741
+    },
+    {
+      "index": 46,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\46_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -1.522324562072754,
+      "improved_mobilenet_aux_abs_error": 1.522324562072754,
+      "legacy_original_cnn": -0.9368605613708496,
+      "legacy_original_cnn_abs_error": 0.9368605613708496
+    },
+    {
+      "index": 47,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\47_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -1.194206714630127,
+      "improved_mobilenet_aux_abs_error": 1.194206714630127,
+      "legacy_original_cnn": -0.4573216736316681,
+      "legacy_original_cnn_abs_error": 0.4573216736316681
+    },
+    {
+      "index": 48,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\48_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.5751209259033203,
+      "improved_mobilenet_aux_abs_error": 0.1751209259033204,
+      "legacy_original_cnn": -0.24383875727653503,
+      "legacy_original_cnn_abs_error": 1.1561612427234649
+    },
+    {
+      "index": 49,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\49_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.430004596710205,
+      "improved_mobilenet_aux_abs_error": 0.030004596710205167,
+      "legacy_original_cnn": 0.06204485893249512,
+      "legacy_original_cnn_abs_error": 1.462044858932495
+    },
+    {
+      "index": 50,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\50_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.5187335014343262,
+      "improved_mobilenet_aux_abs_error": 0.11873350143432626,
+      "legacy_original_cnn": -0.11146664619445801,
+      "legacy_original_cnn_abs_error": 1.288533353805542
+    },
+    {
+      "index": 51,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\51_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.599168062210083,
+      "improved_mobilenet_aux_abs_error": 0.1991680622100831,
+      "legacy_original_cnn": -0.34371039271354675,
+      "legacy_original_cnn_abs_error": 1.0562896072864532
+    },
+    {
+      "index": 52,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\52_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.5241515636444092,
+      "improved_mobilenet_aux_abs_error": 0.12415156364440927,
+      "legacy_original_cnn": -0.30936363339424133,
+      "legacy_original_cnn_abs_error": 1.0906363666057586
+    },
+    {
+      "index": 53,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\53_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.548391580581665,
+      "improved_mobilenet_aux_abs_error": 0.14839158058166513,
+      "legacy_original_cnn": -0.22777912020683289,
+      "legacy_original_cnn_abs_error": 1.172220879793167
+    },
+    {
+      "index": 54,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\54_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.599923849105835,
+      "improved_mobilenet_aux_abs_error": 0.19992384910583505,
+      "legacy_original_cnn": -0.17477712035179138,
+      "legacy_original_cnn_abs_error": 1.2252228796482085
+    },
+    {
+      "index": 55,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\55_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.2244832515716553,
+      "improved_mobilenet_aux_abs_error": 0.17551674842834464,
+      "legacy_original_cnn": -0.11199954152107239,
+      "legacy_original_cnn_abs_error": 1.2880004584789275
+    },
+    {
+      "index": 56,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\56_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.3939173221588135,
+      "improved_mobilenet_aux_abs_error": 0.006082677841186435,
+      "legacy_original_cnn": -0.015509635210037231,
+      "legacy_original_cnn_abs_error": 1.3844903647899627
+    },
+    {
+      "index": 57,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\57_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.3922643661499023,
+      "improved_mobilenet_aux_abs_error": 0.007735633850097567,
+      "legacy_original_cnn": 0.08184435963630676,
+      "legacy_original_cnn_abs_error": 1.4818443596363067
+    },
+    {
+      "index": 58,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\58_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.5941083431243896,
+      "improved_mobilenet_aux_abs_error": 0.19410834312438974,
+      "legacy_original_cnn": 0.09385621547698975,
+      "legacy_original_cnn_abs_error": 1.4938562154769897
+    },
+    {
+      "index": 59,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\59_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.442826271057129,
+      "improved_mobilenet_aux_abs_error": 0.042826271057128995,
+      "legacy_original_cnn": 0.24542014300823212,
+      "legacy_original_cnn_abs_error": 1.645420143008232
+    },
+    {
+      "index": 60,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\60_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.5716469287872314,
+      "improved_mobilenet_aux_abs_error": 0.17164692878723153,
+      "legacy_original_cnn": 0.29372072219848633,
+      "legacy_original_cnn_abs_error": 1.6937207221984862
+    },
+    {
+      "index": 61,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\61_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.100388526916504,
+      "improved_mobilenet_aux_abs_error": 0.299611473083496,
+      "legacy_original_cnn": 0.15646454691886902,
+      "legacy_original_cnn_abs_error": 1.556464546918869
+    },
+    {
+      "index": 62,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\62_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -0.9087516665458679,
+      "improved_mobilenet_aux_abs_error": 0.491248333454132,
+      "legacy_original_cnn": -0.10032626986503601,
+      "legacy_original_cnn_abs_error": 1.299673730134964
+    },
+    {
+      "index": 63,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\63_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.4586942195892334,
+      "improved_mobilenet_aux_abs_error": 0.05869421958923349,
+      "legacy_original_cnn": -0.33043113350868225,
+      "legacy_original_cnn_abs_error": 1.0695688664913177
+    },
+    {
+      "index": 64,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\64_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.5231773853302002,
+      "improved_mobilenet_aux_abs_error": 0.12317738533020028,
+      "legacy_original_cnn": -0.4344457685947418,
+      "legacy_original_cnn_abs_error": 0.9655542314052581
+    },
+    {
+      "index": 65,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\65_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.5595591068267822,
+      "improved_mobilenet_aux_abs_error": 0.15955910682678232,
+      "legacy_original_cnn": -0.6056276559829712,
+      "legacy_original_cnn_abs_error": 0.7943723440170287
+    },
+    {
+      "index": 66,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\66_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.5705549716949463,
+      "improved_mobilenet_aux_abs_error": 0.17055497169494638,
+      "legacy_original_cnn": -0.741286039352417,
+      "legacy_original_cnn_abs_error": 0.6587139606475829
+    },
+    {
+      "index": 67,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\67_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.5221152305603027,
+      "improved_mobilenet_aux_abs_error": 0.12211523056030282,
+      "legacy_original_cnn": -0.7122939825057983,
+      "legacy_original_cnn_abs_error": 0.6877060174942016
+    },
+    {
+      "index": 68,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\68_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.0481452941894531,
+      "improved_mobilenet_aux_abs_error": 0.3518547058105468,
+      "legacy_original_cnn": -0.5775059461593628,
+      "legacy_original_cnn_abs_error": 0.8224940538406371
+    },
+    {
+      "index": 69,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\69_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.206923246383667,
+      "improved_mobilenet_aux_abs_error": 0.19307675361633292,
+      "legacy_original_cnn": -0.5409872531890869,
+      "legacy_original_cnn_abs_error": 0.859012746810913
+    },
+    {
+      "index": 70,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\70_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -0.4023318886756897,
+      "improved_mobilenet_aux_abs_error": 0.9976681113243102,
+      "legacy_original_cnn": -0.5412795543670654,
+      "legacy_original_cnn_abs_error": 0.8587204456329345
+    },
+    {
+      "index": 71,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\71_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.466397762298584,
+      "improved_mobilenet_aux_abs_error": 0.06639776229858407,
+      "legacy_original_cnn": -0.39266857504844666,
+      "legacy_original_cnn_abs_error": 1.0073314249515533
+    },
+    {
+      "index": 72,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\72_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -0.927262008190155,
+      "improved_mobilenet_aux_abs_error": 0.4727379918098449,
+      "legacy_original_cnn": -0.3698841631412506,
+      "legacy_original_cnn_abs_error": 1.0301158368587493
+    },
+    {
+      "index": 73,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\73_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -0.8412207365036011,
+      "improved_mobilenet_aux_abs_error": 0.5587792634963988,
+      "legacy_original_cnn": -0.3996424973011017,
+      "legacy_original_cnn_abs_error": 1.0003575026988982
+    },
+    {
+      "index": 74,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\74_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.3140287399291992,
+      "improved_mobilenet_aux_abs_error": 0.08597126007080069,
+      "legacy_original_cnn": -0.3375602662563324,
+      "legacy_original_cnn_abs_error": 1.0624397337436675
+    },
+    {
+      "index": 75,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\75_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.2553339004516602,
+      "improved_mobilenet_aux_abs_error": 0.14466609954833975,
+      "legacy_original_cnn": -0.3682519495487213,
+      "legacy_original_cnn_abs_error": 1.0317480504512786
+    },
+    {
+      "index": 76,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\76_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.1707243919372559,
+      "improved_mobilenet_aux_abs_error": 0.22927560806274405,
+      "legacy_original_cnn": -0.379817396402359,
+      "legacy_original_cnn_abs_error": 1.020182603597641
+    },
+    {
+      "index": 77,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\77_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -0.7989497780799866,
+      "improved_mobilenet_aux_abs_error": 0.6010502219200133,
+      "legacy_original_cnn": -0.09414714574813843,
+      "legacy_original_cnn_abs_error": 1.3058528542518615
+    },
+    {
+      "index": 78,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\78_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.04902982711792,
+      "improved_mobilenet_aux_abs_error": 0.35097017288208,
+      "legacy_original_cnn": 0.12174133956432343,
+      "legacy_original_cnn_abs_error": 1.5217413395643233
+    },
+    {
+      "index": 79,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\79_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.132227897644043,
+      "improved_mobilenet_aux_abs_error": 0.26777210235595694,
+      "legacy_original_cnn": 0.6104013919830322,
+      "legacy_original_cnn_abs_error": 2.010401391983032
+    },
+    {
+      "index": 80,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\80_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.0264151096343994,
+      "improved_mobilenet_aux_abs_error": 0.3735848903656005,
+      "legacy_original_cnn": 0.852726936340332,
+      "legacy_original_cnn_abs_error": 2.252726936340332
+    },
+    {
+      "index": 81,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\81_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -0.8732265830039978,
+      "improved_mobilenet_aux_abs_error": 0.5267734169960021,
+      "legacy_original_cnn": 1.184305191040039,
+      "legacy_original_cnn_abs_error": 2.584305191040039
+    },
+    {
+      "index": 82,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\82_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.167712926864624,
+      "improved_mobilenet_aux_abs_error": 0.2322870731353759,
+      "legacy_original_cnn": 1.2833257913589478,
+      "legacy_original_cnn_abs_error": 2.6833257913589477
+    },
+    {
+      "index": 83,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\83_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.2508375644683838,
+      "improved_mobilenet_aux_abs_error": 0.14916243553161612,
+      "legacy_original_cnn": 1.406771183013916,
+      "legacy_original_cnn_abs_error": 2.806771183013916
+    },
+    {
+      "index": 84,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\84_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.2486886978149414,
+      "improved_mobilenet_aux_abs_error": 0.1513113021850585,
+      "legacy_original_cnn": 1.4644070863723755,
+      "legacy_original_cnn_abs_error": 2.8644070863723754
+    },
+    {
+      "index": 85,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\85_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.4835662841796875,
+      "improved_mobilenet_aux_abs_error": 0.08356628417968759,
+      "legacy_original_cnn": 1.4695979356765747,
+      "legacy_original_cnn_abs_error": 2.8695979356765746
+    },
+    {
+      "index": 86,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\86_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.4590539932250977,
+      "improved_mobilenet_aux_abs_error": 0.059053993225097745,
+      "legacy_original_cnn": 1.468882441520691,
+      "legacy_original_cnn_abs_error": 2.868882441520691
+    },
+    {
+      "index": 87,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\87_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.1391477584838867,
+      "improved_mobilenet_aux_abs_error": 0.2608522415161132,
+      "legacy_original_cnn": 1.3700658082962036,
+      "legacy_original_cnn_abs_error": 2.7700658082962035
+    },
+    {
+      "index": 88,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\88_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.2928223609924316,
+      "improved_mobilenet_aux_abs_error": 0.10717763900756827,
+      "legacy_original_cnn": 1.058712363243103,
+      "legacy_original_cnn_abs_error": 2.458712363243103
+    },
+    {
+      "index": 89,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\89_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -0.11561927199363708,
+      "improved_mobilenet_aux_abs_error": 1.2843807280063628,
+      "legacy_original_cnn": 0.822460412979126,
+      "legacy_original_cnn_abs_error": 2.222460412979126
+    },
+    {
+      "index": 90,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\90_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": 0.1673833131790161,
+      "improved_mobilenet_aux_abs_error": 1.567383313179016,
+      "legacy_original_cnn": 0.9392393827438354,
+      "legacy_original_cnn_abs_error": 2.3392393827438354
+    },
+    {
+      "index": 91,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\91_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -1.5045404434204102,
+      "improved_mobilenet_aux_abs_error": 0.10454044342041025,
+      "legacy_original_cnn": 1.2271146774291992,
+      "legacy_original_cnn_abs_error": 2.627114677429199
+    },
+    {
+      "index": 92,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\92_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -0.8302759528160095,
+      "improved_mobilenet_aux_abs_error": 0.5697240471839904,
+      "legacy_original_cnn": 1.2818326950073242,
+      "legacy_original_cnn_abs_error": 2.681832695007324
+    },
+    {
+      "index": 93,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\93_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -0.8283777832984924,
+      "improved_mobilenet_aux_abs_error": 0.5716222167015075,
+      "legacy_original_cnn": 1.2085626125335693,
+      "legacy_original_cnn_abs_error": 2.6085626125335692
+    },
+    {
+      "index": 94,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\94_-1.4000.jpg",
+      "groundTruth": -1.4,
+      "improved_mobilenet_aux": -0.6945963501930237,
+      "improved_mobilenet_aux_abs_error": 0.7054036498069762,
+      "legacy_original_cnn": 0.9771707057952881,
+      "legacy_original_cnn_abs_error": 2.377170705795288
+    },
+    {
+      "index": 95,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\95_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": 0.5075185298919678,
+      "improved_mobilenet_aux_abs_error": 0.5075185298919678,
+      "legacy_original_cnn": 1.0084114074707031,
+      "legacy_original_cnn_abs_error": 1.0084114074707031
+    },
+    {
+      "index": 96,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\96_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.5785937309265137,
+      "improved_mobilenet_aux_abs_error": 0.11859373092651371,
+      "legacy_original_cnn": 1.0986210107803345,
+      "legacy_original_cnn_abs_error": 2.5586210107803344
+    },
+    {
+      "index": 97,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\97_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.1650464534759521,
+      "improved_mobilenet_aux_abs_error": 0.2949535465240478,
+      "legacy_original_cnn": 0.903303861618042,
+      "legacy_original_cnn_abs_error": 2.363303861618042
+    },
+    {
+      "index": 98,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\98_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": 0.3278281092643738,
+      "improved_mobilenet_aux_abs_error": 1.7878281092643737,
+      "legacy_original_cnn": 0.7297993898391724,
+      "legacy_original_cnn_abs_error": 2.1897993898391723
+    },
+    {
+      "index": 99,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\99_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": 0.19693207740783691,
+      "improved_mobilenet_aux_abs_error": 1.6569320774078369,
+      "legacy_original_cnn": 0.5188659429550171,
+      "legacy_original_cnn_abs_error": 1.978865942955017
+    },
+    {
+      "index": 100,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\100_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.2914822101593018,
+      "improved_mobilenet_aux_abs_error": 0.1685177898406982,
+      "legacy_original_cnn": 0.13112542033195496,
+      "legacy_original_cnn_abs_error": 1.591125420331955
+    },
+    {
+      "index": 101,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\101_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -0.43253904581069946,
+      "improved_mobilenet_aux_abs_error": 1.0274609541893005,
+      "legacy_original_cnn": -0.191561758518219,
+      "legacy_original_cnn_abs_error": 1.268438241481781
+    },
+    {
+      "index": 102,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\102_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -0.37761569023132324,
+      "improved_mobilenet_aux_abs_error": 1.0823843097686767,
+      "legacy_original_cnn": -0.08495116233825684,
+      "legacy_original_cnn_abs_error": 1.3750488376617431
+    },
+    {
+      "index": 103,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\103_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.2202229499816895,
+      "improved_mobilenet_aux_abs_error": 0.2397770500183105,
+      "legacy_original_cnn": -0.09443241357803345,
+      "legacy_original_cnn_abs_error": 1.3655675864219665
+    },
+    {
+      "index": 104,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\104_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.5824706554412842,
+      "improved_mobilenet_aux_abs_error": 0.12247065544128422,
+      "legacy_original_cnn": -0.06892862915992737,
+      "legacy_original_cnn_abs_error": 1.3910713708400726
+    },
+    {
+      "index": 105,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\105_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.583852767944336,
+      "improved_mobilenet_aux_abs_error": 0.12385276794433597,
+      "legacy_original_cnn": -0.17776545882225037,
+      "legacy_original_cnn_abs_error": 1.2822345411777496
+    },
+    {
+      "index": 106,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\106_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.3672668933868408,
+      "improved_mobilenet_aux_abs_error": 0.09273310661315914,
+      "legacy_original_cnn": -0.22822806239128113,
+      "legacy_original_cnn_abs_error": 1.2317719376087188
+    },
+    {
+      "index": 107,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\107_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -0.6971314549446106,
+      "improved_mobilenet_aux_abs_error": 0.7628685450553894,
+      "legacy_original_cnn": -0.15743595361709595,
+      "legacy_original_cnn_abs_error": 1.302564046382904
+    },
+    {
+      "index": 108,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\108_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -0.9369375109672546,
+      "improved_mobilenet_aux_abs_error": 0.5230624890327453,
+      "legacy_original_cnn": -0.03781235218048096,
+      "legacy_original_cnn_abs_error": 1.422187647819519
+    },
+    {
+      "index": 109,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\109_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -0.49703478813171387,
+      "improved_mobilenet_aux_abs_error": 0.9629652118682861,
+      "legacy_original_cnn": 0.043193548917770386,
+      "legacy_original_cnn_abs_error": 1.5031935489177704
+    },
+    {
+      "index": 110,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\110_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.3988239765167236,
+      "improved_mobilenet_aux_abs_error": 0.06117602348327633,
+      "legacy_original_cnn": 0.24613359570503235,
+      "legacy_original_cnn_abs_error": 1.7061335957050323
+    },
+    {
+      "index": 111,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\111_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.093630313873291,
+      "improved_mobilenet_aux_abs_error": 0.36636968612670895,
+      "legacy_original_cnn": 0.3419283926486969,
+      "legacy_original_cnn_abs_error": 1.8019283926486969
+    },
+    {
+      "index": 112,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\112_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": 0.20033439993858337,
+      "improved_mobilenet_aux_abs_error": 1.6603343999385833,
+      "legacy_original_cnn": 0.4667688310146332,
+      "legacy_original_cnn_abs_error": 1.9267688310146331
+    },
+    {
+      "index": 113,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\113_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.1783177852630615,
+      "improved_mobilenet_aux_abs_error": 0.28168221473693844,
+      "legacy_original_cnn": 0.6091247797012329,
+      "legacy_original_cnn_abs_error": 2.069124779701233
+    },
+    {
+      "index": 114,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\114_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -0.2695881128311157,
+      "improved_mobilenet_aux_abs_error": 1.1904118871688842,
+      "legacy_original_cnn": 0.6630531549453735,
+      "legacy_original_cnn_abs_error": 2.1230531549453735
+    },
+    {
+      "index": 115,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\115_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.1550893783569336,
+      "improved_mobilenet_aux_abs_error": 0.30491062164306637,
+      "legacy_original_cnn": 0.7456705570220947,
+      "legacy_original_cnn_abs_error": 2.2056705570220947
+    },
+    {
+      "index": 116,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\116_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.1723453998565674,
+      "improved_mobilenet_aux_abs_error": 0.2876546001434326,
+      "legacy_original_cnn": 0.8038681745529175,
+      "legacy_original_cnn_abs_error": 2.2638681745529174
+    },
+    {
+      "index": 117,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\117_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -0.326654314994812,
+      "improved_mobilenet_aux_abs_error": 1.133345685005188,
+      "legacy_original_cnn": 0.8706200122833252,
+      "legacy_original_cnn_abs_error": 2.330620012283325
+    },
+    {
+      "index": 118,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\118_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -0.6403490304946899,
+      "improved_mobilenet_aux_abs_error": 0.81965096950531,
+      "legacy_original_cnn": 0.9587997198104858,
+      "legacy_original_cnn_abs_error": 2.418799719810486
+    },
+    {
+      "index": 119,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\119_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.2646229267120361,
+      "improved_mobilenet_aux_abs_error": 0.19537707328796383,
+      "legacy_original_cnn": 0.9638938903808594,
+      "legacy_original_cnn_abs_error": 2.4238938903808593
+    },
+    {
+      "index": 120,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\120_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.1245851516723633,
+      "improved_mobilenet_aux_abs_error": 0.3354148483276367,
+      "legacy_original_cnn": 0.8518519401550293,
+      "legacy_original_cnn_abs_error": 2.3118519401550293
+    },
+    {
+      "index": 121,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\121_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.3519959449768066,
+      "improved_mobilenet_aux_abs_error": 0.10800405502319332,
+      "legacy_original_cnn": 0.7670317888259888,
+      "legacy_original_cnn_abs_error": 2.2270317888259887
+    },
+    {
+      "index": 122,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\122_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.221189022064209,
+      "improved_mobilenet_aux_abs_error": 0.23881097793579098,
+      "legacy_original_cnn": 0.7843946218490601,
+      "legacy_original_cnn_abs_error": 2.24439462184906
+    },
+    {
+      "index": 123,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\123_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.361894130706787,
+      "improved_mobilenet_aux_abs_error": 0.09810586929321286,
+      "legacy_original_cnn": 0.8452733755111694,
+      "legacy_original_cnn_abs_error": 2.3052733755111694
+    },
+    {
+      "index": 124,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\124_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.490056037902832,
+      "improved_mobilenet_aux_abs_error": 0.030056037902832067,
+      "legacy_original_cnn": 0.8974255323410034,
+      "legacy_original_cnn_abs_error": 2.3574255323410034
+    },
+    {
+      "index": 125,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\125_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.6468613147735596,
+      "improved_mobilenet_aux_abs_error": 0.1868613147735596,
+      "legacy_original_cnn": 1.1474353075027466,
+      "legacy_original_cnn_abs_error": 2.6074353075027465
+    },
+    {
+      "index": 126,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\126_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.6759693622589111,
+      "improved_mobilenet_aux_abs_error": 0.21596936225891117,
+      "legacy_original_cnn": 1.117874026298523,
+      "legacy_original_cnn_abs_error": 2.577874026298523
+    },
+    {
+      "index": 127,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\127_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.4407455921173096,
+      "improved_mobilenet_aux_abs_error": 0.019254407882690394,
+      "legacy_original_cnn": 0.9498100280761719,
+      "legacy_original_cnn_abs_error": 2.409810028076172
+    },
+    {
+      "index": 128,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\128_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.5603711605072021,
+      "improved_mobilenet_aux_abs_error": 0.10037116050720218,
+      "legacy_original_cnn": 0.7993813753128052,
+      "legacy_original_cnn_abs_error": 2.259381375312805
+    },
+    {
+      "index": 129,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\129_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.4853549003601074,
+      "improved_mobilenet_aux_abs_error": 0.025354900360107457,
+      "legacy_original_cnn": 0.5364698171615601,
+      "legacy_original_cnn_abs_error": 1.99646981716156
+    },
+    {
+      "index": 130,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\130_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.538083791732788,
+      "improved_mobilenet_aux_abs_error": 0.07808379173278812,
+      "legacy_original_cnn": 0.3754594922065735,
+      "legacy_original_cnn_abs_error": 1.8354594922065735
+    },
+    {
+      "index": 131,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\131_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.4218885898590088,
+      "improved_mobilenet_aux_abs_error": 0.038111410140991175,
+      "legacy_original_cnn": -0.047049492597579956,
+      "legacy_original_cnn_abs_error": 1.41295050740242
+    },
+    {
+      "index": 132,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\132_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.0113043785095215,
+      "improved_mobilenet_aux_abs_error": 0.4486956214904785,
+      "legacy_original_cnn": -0.2646355926990509,
+      "legacy_original_cnn_abs_error": 1.195364407300949
+    },
+    {
+      "index": 133,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\133_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.3733100891113281,
+      "improved_mobilenet_aux_abs_error": 0.08668991088867184,
+      "legacy_original_cnn": -0.6987118721008301,
+      "legacy_original_cnn_abs_error": 0.7612881278991699
+    },
+    {
+      "index": 134,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\134_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.0892326831817627,
+      "improved_mobilenet_aux_abs_error": 0.37076731681823727,
+      "legacy_original_cnn": -0.9029290676116943,
+      "legacy_original_cnn_abs_error": 0.5570709323883056
+    },
+    {
+      "index": 135,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\135_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.0048890113830566,
+      "improved_mobilenet_aux_abs_error": 0.4551109886169433,
+      "legacy_original_cnn": -0.9016743898391724,
+      "legacy_original_cnn_abs_error": 0.5583256101608276
+    },
+    {
+      "index": 136,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\136_-1.4600.jpg",
+      "groundTruth": -1.46,
+      "improved_mobilenet_aux": -1.0213537216186523,
+      "improved_mobilenet_aux_abs_error": 0.4386462783813476,
+      "legacy_original_cnn": -0.9212557077407837,
+      "legacy_original_cnn_abs_error": 0.5387442922592163
+    },
+    {
+      "index": 137,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\137_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.6577737927436829,
+      "improved_mobilenet_aux_abs_error": 0.6577737927436829,
+      "legacy_original_cnn": -0.8080852031707764,
+      "legacy_original_cnn_abs_error": 0.8080852031707764
+    },
+    {
+      "index": 138,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\138_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.7970622777938843,
+      "improved_mobilenet_aux_abs_error": 0.7970622777938843,
+      "legacy_original_cnn": -0.6701316833496094,
+      "legacy_original_cnn_abs_error": 0.6701316833496094
+    },
+    {
+      "index": 139,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\139_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.6203664541244507,
+      "improved_mobilenet_aux_abs_error": 0.6203664541244507,
+      "legacy_original_cnn": -0.5764032602310181,
+      "legacy_original_cnn_abs_error": 0.5764032602310181
+    },
+    {
+      "index": 140,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\140_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.7506430745124817,
+      "improved_mobilenet_aux_abs_error": 0.7506430745124817,
+      "legacy_original_cnn": -0.5725195407867432,
+      "legacy_original_cnn_abs_error": 0.5725195407867432
+    },
+    {
+      "index": 141,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\141_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.9352495074272156,
+      "improved_mobilenet_aux_abs_error": 0.9352495074272156,
+      "legacy_original_cnn": -0.6106963157653809,
+      "legacy_original_cnn_abs_error": 0.6106963157653809
+    },
+    {
+      "index": 142,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\142_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.9636518359184265,
+      "improved_mobilenet_aux_abs_error": 0.9636518359184265,
+      "legacy_original_cnn": -0.6245312690734863,
+      "legacy_original_cnn_abs_error": 0.6245312690734863
+    },
+    {
+      "index": 143,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\143_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.8419889211654663,
+      "improved_mobilenet_aux_abs_error": 0.8419889211654663,
+      "legacy_original_cnn": -0.6290392875671387,
+      "legacy_original_cnn_abs_error": 0.6290392875671387
+    },
+    {
+      "index": 144,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\144_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.5546165108680725,
+      "improved_mobilenet_aux_abs_error": 0.5546165108680725,
+      "legacy_original_cnn": -0.716496467590332,
+      "legacy_original_cnn_abs_error": 0.716496467590332
+    },
+    {
+      "index": 145,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\145_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -1.0166094303131104,
+      "improved_mobilenet_aux_abs_error": 1.0166094303131104,
+      "legacy_original_cnn": -0.7670637369155884,
+      "legacy_original_cnn_abs_error": 0.7670637369155884
+    },
+    {
+      "index": 146,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\146_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -1.077336311340332,
+      "improved_mobilenet_aux_abs_error": 1.077336311340332,
+      "legacy_original_cnn": -0.7500251531600952,
+      "legacy_original_cnn_abs_error": 0.7500251531600952
+    },
+    {
+      "index": 147,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\147_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.659985363483429,
+      "improved_mobilenet_aux_abs_error": 0.659985363483429,
+      "legacy_original_cnn": -0.6929014921188354,
+      "legacy_original_cnn_abs_error": 0.6929014921188354
+    },
+    {
+      "index": 148,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\148_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.7365148067474365,
+      "improved_mobilenet_aux_abs_error": 0.7365148067474365,
+      "legacy_original_cnn": -0.6857080459594727,
+      "legacy_original_cnn_abs_error": 0.6857080459594727
+    },
+    {
+      "index": 149,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\149_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.6850863695144653,
+      "improved_mobilenet_aux_abs_error": 0.6850863695144653,
+      "legacy_original_cnn": -0.7448076009750366,
+      "legacy_original_cnn_abs_error": 0.7448076009750366
+    },
+    {
+      "index": 150,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\150_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.8616439700126648,
+      "improved_mobilenet_aux_abs_error": 0.8616439700126648,
+      "legacy_original_cnn": -0.8730871677398682,
+      "legacy_original_cnn_abs_error": 0.8730871677398682
+    },
+    {
+      "index": 151,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\151_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.8895519375801086,
+      "improved_mobilenet_aux_abs_error": 0.8895519375801086,
+      "legacy_original_cnn": -0.8483250141143799,
+      "legacy_original_cnn_abs_error": 0.8483250141143799
+    },
+    {
+      "index": 152,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\152_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.46279197931289673,
+      "improved_mobilenet_aux_abs_error": 0.46279197931289673,
+      "legacy_original_cnn": -0.9031894207000732,
+      "legacy_original_cnn_abs_error": 0.9031894207000732
+    },
+    {
+      "index": 153,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\153_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.6594173312187195,
+      "improved_mobilenet_aux_abs_error": 0.6594173312187195,
+      "legacy_original_cnn": -0.8620474338531494,
+      "legacy_original_cnn_abs_error": 0.8620474338531494
+    },
+    {
+      "index": 154,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\154_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.37128591537475586,
+      "improved_mobilenet_aux_abs_error": 0.37128591537475586,
+      "legacy_original_cnn": -0.8233551979064941,
+      "legacy_original_cnn_abs_error": 0.8233551979064941
+    },
+    {
+      "index": 155,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\155_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -1.0088434219360352,
+      "improved_mobilenet_aux_abs_error": 1.0088434219360352,
+      "legacy_original_cnn": -0.6145809888839722,
+      "legacy_original_cnn_abs_error": 0.6145809888839722
+    },
+    {
+      "index": 156,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\156_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -1.0860881805419922,
+      "improved_mobilenet_aux_abs_error": 1.0860881805419922,
+      "legacy_original_cnn": -0.5841119289398193,
+      "legacy_original_cnn_abs_error": 0.5841119289398193
+    },
+    {
+      "index": 157,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\157_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.8356272578239441,
+      "improved_mobilenet_aux_abs_error": 0.8356272578239441,
+      "legacy_original_cnn": -0.42458924651145935,
+      "legacy_original_cnn_abs_error": 0.42458924651145935
+    },
+    {
+      "index": 158,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\3\\2\\158_0.0000.jpg",
+      "groundTruth": 0.0,
+      "improved_mobilenet_aux": -0.5838198661804199,
+      "improved_mobilenet_aux_abs_error": 0.5838198661804199,
+      "legacy_original_cnn": -0.43582043051719666,
+      "legacy_original_cnn_abs_error": 0.43582043051719666
+    }
+  ]
+}

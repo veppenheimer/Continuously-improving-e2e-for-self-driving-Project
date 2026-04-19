@@ -1,0 +1,18 @@
+{
+  "requestedEpochs": 100,
+  "completedEpochs": 31,
+  "bestEpoch": 21,
+  "stoppedEpoch": 31,
+  "earlyStopped": true,
+  "finalTrainLoss": 0.3846924974293005,
+  "finalValLoss": 0.3797136122696244,
+  "steeringError": 0.05152441454887162,
+  "finalTrainAcc": 0.9663934426229508,
+  "finalValAcc": 0.9540229885057471,
+  "finalTrainAngleMAE": 0.04938323964349559,
+  "finalValAngleMAE": 0.07861992984410675,
+  "finalTestLoss": 0.417170045030026,
+  "finalTestAcc": 0.9351145047267885,
+  "finalTestAngleMAE": 0.08701288791103218,
+  "usedDedicatedTestSplit": true
+}

@@ -1,0 +1,14 @@
+folder: E:\����\data
+run_dir: E:\����\��Ŀ\training_runs\generalization_real_data_20260418_115800
+device: cuda
+tested_images: 1743
+roi_enabled: False
+roi_bottom_ratio: 0.600
+plot: E:\����\��Ŀ\training_runs\generalization_real_data_20260418_115800\multi_dataset_tests_full_image_20260418_1240\source_data\joint_dataset_compare.png
+json: E:\����\��Ŀ\training_runs\generalization_real_data_20260418_115800\multi_dataset_tests_full_image_20260418_1240\source_data\joint_dataset_compare.json
+
+model           mae
+--------------- ------------
+Net_class           0.075132
+Net_improve         0.078797
+Net_regression      0.076862

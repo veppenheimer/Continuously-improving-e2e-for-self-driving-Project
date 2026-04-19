@@ -1,0 +1,754 @@
+{
+  "folder": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2",
+  "runDir": "E:\\桌面\\项目\\training_runs\\generalization_real_data_20260418_115800",
+  "numImages": 91,
+  "device": "cuda",
+  "preprocess": {
+    "colorSpace": "hsv",
+    "inputSize": [
+      120,
+      160
+    ],
+    "useRoi": false
+  },
+  "roi": {
+    "enabled": false,
+    "mode": "bottom_ratio",
+    "bottomRatio": 0.6
+  },
+  "mae": {
+    "Net_class": 2.118665630414373,
+    "Net_improve": 1.967134065934066,
+    "Net_regression": 0.7878306591878881
+  },
+  "results": [
+    {
+      "index": 0,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\0_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -7.20635725883767e-05,
+      "Net_improve": 0.0,
+      "Net_regression": 0.16100940108299255
+    },
+    {
+      "index": 1,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\1_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": 0.0021568606607615948,
+      "Net_improve": 0.0,
+      "Net_regression": 0.3214886784553528
+    },
+    {
+      "index": 2,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\2_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": 0.0021671077702194452,
+      "Net_improve": 0.0,
+      "Net_regression": -0.02470281720161438
+    },
+    {
+      "index": 3,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\3_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": 0.0019166163401678205,
+      "Net_improve": 1.5,
+      "Net_regression": 0.03057962656021118
+    },
+    {
+      "index": 4,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\4_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -0.00028716339147649705,
+      "Net_improve": 0.0,
+      "Net_regression": -0.2321678102016449
+    },
+    {
+      "index": 5,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\5_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -0.0006929977680556476,
+      "Net_improve": 0.0,
+      "Net_regression": -0.15666010975837708
+    },
+    {
+      "index": 6,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\6_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -1.573202133178711,
+      "Net_improve": 1.5,
+      "Net_regression": 0.04536059498786926
+    },
+    {
+      "index": 7,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\7_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": 1.5718169212341309,
+      "Net_improve": 1.5,
+      "Net_regression": 0.36869293451309204
+    },
+    {
+      "index": 8,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\8_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": 1.6336077451705933,
+      "Net_improve": 1.5,
+      "Net_regression": 0.9467772841453552
+    },
+    {
+      "index": 9,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\9_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": 1.5829873085021973,
+      "Net_improve": 1.5,
+      "Net_regression": 0.7541694045066833
+    },
+    {
+      "index": 10,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\10_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": 1.6305936574935913,
+      "Net_improve": 1.5,
+      "Net_regression": 1.0535082817077637
+    },
+    {
+      "index": 11,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\11_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": 1.6454663276672363,
+      "Net_improve": 1.72,
+      "Net_regression": 0.6541684865951538
+    },
+    {
+      "index": 12,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\12_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": 1.6484593152999878,
+      "Net_improve": 1.72,
+      "Net_regression": 0.8292346596717834
+    },
+    {
+      "index": 13,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\13_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.58378005027771,
+      "Net_improve": -1.58,
+      "Net_regression": 0.23643875122070312
+    },
+    {
+      "index": 14,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\14_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5784525871276855,
+      "Net_improve": 1.5,
+      "Net_regression": 1.231215000152588
+    },
+    {
+      "index": 15,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\15_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5802364349365234,
+      "Net_improve": -1.58,
+      "Net_regression": 0.1638524830341339
+    },
+    {
+      "index": 16,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\16_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5774575471878052,
+      "Net_improve": -1.58,
+      "Net_regression": 1.2319564819335938
+    },
+    {
+      "index": 17,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\17_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5742686986923218,
+      "Net_improve": 1.5,
+      "Net_regression": 1.4770145416259766
+    },
+    {
+      "index": 18,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\18_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5779595375061035,
+      "Net_improve": 1.5,
+      "Net_regression": 1.3716423511505127
+    },
+    {
+      "index": 19,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\19_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5814191102981567,
+      "Net_improve": 1.72,
+      "Net_regression": 1.3492465019226074
+    },
+    {
+      "index": 20,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\20_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5826507806777954,
+      "Net_improve": -1.58,
+      "Net_regression": 0.9664706587791443
+    },
+    {
+      "index": 21,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\21_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": 1.6384435892105103,
+      "Net_improve": 1.72,
+      "Net_regression": 1.4760715961456299
+    },
+    {
+      "index": 22,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\22_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5767834186553955,
+      "Net_improve": -1.58,
+      "Net_regression": 0.9188379049301147
+    },
+    {
+      "index": 23,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\23_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5871834754943848,
+      "Net_improve": -1.62,
+      "Net_regression": 0.4524783492088318
+    },
+    {
+      "index": 24,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\24_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5812342166900635,
+      "Net_improve": 1.72,
+      "Net_regression": 1.2206459045410156
+    },
+    {
+      "index": 25,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\25_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.594381332397461,
+      "Net_improve": -1.62,
+      "Net_regression": 0.34662926197052
+    },
+    {
+      "index": 26,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\26_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5902018547058105,
+      "Net_improve": 1.72,
+      "Net_regression": 0.5993332862854004
+    },
+    {
+      "index": 27,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\27_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5824772119522095,
+      "Net_improve": 1.72,
+      "Net_regression": 0.41770702600479126
+    },
+    {
+      "index": 28,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\28_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5823472738265991,
+      "Net_improve": -1.58,
+      "Net_regression": 0.7460923194885254
+    },
+    {
+      "index": 29,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\29_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5861296653747559,
+      "Net_improve": -1.62,
+      "Net_regression": 1.038679838180542
+    },
+    {
+      "index": 30,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\30_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5771278142929077,
+      "Net_improve": -1.58,
+      "Net_regression": 1.2551071643829346
+    },
+    {
+      "index": 31,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\31_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5710034370422363,
+      "Net_improve": -1.56,
+      "Net_regression": 1.368309497833252
+    },
+    {
+      "index": 32,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\32_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5770750045776367,
+      "Net_improve": -1.58,
+      "Net_regression": 1.3459293842315674
+    },
+    {
+      "index": 33,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\33_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5716081857681274,
+      "Net_improve": -1.58,
+      "Net_regression": 1.3627312183380127
+    },
+    {
+      "index": 34,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\34_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": 1.577413558959961,
+      "Net_improve": 1.5,
+      "Net_regression": 1.1358165740966797
+    },
+    {
+      "index": 35,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\35_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5806173086166382,
+      "Net_improve": -1.58,
+      "Net_regression": 0.6320744752883911
+    },
+    {
+      "index": 36,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\36_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5682222843170166,
+      "Net_improve": -1.56,
+      "Net_regression": 0.4939967393875122
+    },
+    {
+      "index": 37,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\37_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5614136457443237,
+      "Net_improve": -1.56,
+      "Net_regression": 0.6178016662597656
+    },
+    {
+      "index": 38,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\38_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5647917985916138,
+      "Net_improve": -1.56,
+      "Net_regression": 0.16296547651290894
+    },
+    {
+      "index": 39,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\39_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5690897703170776,
+      "Net_improve": -1.56,
+      "Net_regression": -0.6247628331184387
+    },
+    {
+      "index": 40,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\40_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.563398003578186,
+      "Net_improve": -1.56,
+      "Net_regression": 1.0333523750305176
+    },
+    {
+      "index": 41,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\41_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5660103559494019,
+      "Net_improve": -1.56,
+      "Net_regression": 1.0054885149002075
+    },
+    {
+      "index": 42,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\42_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.564612627029419,
+      "Net_improve": -1.56,
+      "Net_regression": 0.5965181589126587
+    },
+    {
+      "index": 43,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\43_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5661615133285522,
+      "Net_improve": -1.56,
+      "Net_regression": 0.4861319959163666
+    },
+    {
+      "index": 44,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\44_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5648523569107056,
+      "Net_improve": -1.56,
+      "Net_regression": -0.829948902130127
+    },
+    {
+      "index": 45,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\45_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5675958395004272,
+      "Net_improve": -1.56,
+      "Net_regression": 0.010110989212989807
+    },
+    {
+      "index": 46,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\46_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5664499998092651,
+      "Net_improve": -1.56,
+      "Net_regression": 0.07823827862739563
+    },
+    {
+      "index": 47,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\47_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5619412660598755,
+      "Net_improve": -1.56,
+      "Net_regression": -0.17642635107040405
+    },
+    {
+      "index": 48,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\48_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5655503273010254,
+      "Net_improve": -1.56,
+      "Net_regression": -0.4107869863510132
+    },
+    {
+      "index": 49,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\49_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5711573362350464,
+      "Net_improve": -1.56,
+      "Net_regression": -0.5578262209892273
+    },
+    {
+      "index": 50,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\50_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5691053867340088,
+      "Net_improve": -1.56,
+      "Net_regression": -0.45722049474716187
+    },
+    {
+      "index": 51,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\51_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5748018026351929,
+      "Net_improve": -1.56,
+      "Net_regression": 0.015969589352607727
+    },
+    {
+      "index": 52,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\52_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5818655490875244,
+      "Net_improve": -1.56,
+      "Net_regression": -0.20567864179611206
+    },
+    {
+      "index": 53,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\53_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5671902894973755,
+      "Net_improve": -1.56,
+      "Net_regression": -0.024921566247940063
+    },
+    {
+      "index": 54,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\54_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5702226161956787,
+      "Net_improve": -1.56,
+      "Net_regression": 1.127485990524292
+    },
+    {
+      "index": 55,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\55_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5717979669570923,
+      "Net_improve": -1.56,
+      "Net_regression": 0.5977475047111511
+    },
+    {
+      "index": 56,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\56_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5730247497558594,
+      "Net_improve": -1.56,
+      "Net_regression": 0.8767843842506409
+    },
+    {
+      "index": 57,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\57_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.57368004322052,
+      "Net_improve": -1.56,
+      "Net_regression": 0.17600023746490479
+    },
+    {
+      "index": 58,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\58_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5735082626342773,
+      "Net_improve": -1.56,
+      "Net_regression": 0.12231050431728363
+    },
+    {
+      "index": 59,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\59_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5728795528411865,
+      "Net_improve": -1.56,
+      "Net_regression": 1.030038595199585
+    },
+    {
+      "index": 60,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\60_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5699619054794312,
+      "Net_improve": -1.56,
+      "Net_regression": 1.220508337020874
+    },
+    {
+      "index": 61,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\61_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.572911262512207,
+      "Net_improve": -1.56,
+      "Net_regression": 0.6675532460212708
+    },
+    {
+      "index": 62,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\62_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": 1.5463101863861084,
+      "Net_improve": 1.5,
+      "Net_regression": 0.49271076917648315
+    },
+    {
+      "index": 63,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\63_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": 1.5720500946044922,
+      "Net_improve": 1.5,
+      "Net_regression": 1.3379569053649902
+    },
+    {
+      "index": 64,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\64_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": 1.56080961227417,
+      "Net_improve": 1.5,
+      "Net_regression": 1.475951910018921
+    },
+    {
+      "index": 65,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\65_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5833834409713745,
+      "Net_improve": 1.5,
+      "Net_regression": 0.11190571635961533
+    },
+    {
+      "index": 66,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\66_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5846084356307983,
+      "Net_improve": -1.56,
+      "Net_regression": -0.3840290904045105
+    },
+    {
+      "index": 67,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\67_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5830062627792358,
+      "Net_improve": -1.56,
+      "Net_regression": 0.0055391788482666016
+    },
+    {
+      "index": 68,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\68_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -0.0019763605669140816,
+      "Net_improve": -1.56,
+      "Net_regression": -0.06763935089111328
+    },
+    {
+      "index": 69,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\69_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": 0.001944545190781355,
+      "Net_improve": -1.56,
+      "Net_regression": 0.44569623470306396
+    },
+    {
+      "index": 70,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\70_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5861371755599976,
+      "Net_improve": -1.56,
+      "Net_regression": 0.0032355189323425293
+    },
+    {
+      "index": 71,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\71_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.578961968421936,
+      "Net_improve": -1.56,
+      "Net_regression": -0.07120314240455627
+    },
+    {
+      "index": 72,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\72_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": 0.0008087652968242764,
+      "Net_improve": -1.56,
+      "Net_regression": -0.05207182466983795
+    },
+    {
+      "index": 73,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\73_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -1.5780521631240845,
+      "Net_improve": -1.56,
+      "Net_regression": -0.35573798418045044
+    },
+    {
+      "index": 74,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\74_1.3997.jpg",
+      "groundTruth": 1.3997,
+      "Net_class": -0.0009875399991869926,
+      "Net_improve": -1.58,
+      "Net_regression": -0.13614842295646667
+    },
+    {
+      "index": 75,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\75_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -0.002406899118795991,
+      "Net_improve": 0.0,
+      "Net_regression": -0.4208637475967407
+    },
+    {
+      "index": 76,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\76_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -0.00428414111956954,
+      "Net_improve": 0.0,
+      "Net_regression": -0.4831938147544861
+    },
+    {
+      "index": 77,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\77_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -0.0011104296427220106,
+      "Net_improve": 0.0,
+      "Net_regression": -0.29194292426109314
+    },
+    {
+      "index": 78,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\78_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -1.5748460292816162,
+      "Net_improve": -1.56,
+      "Net_regression": -0.3051655888557434
+    },
+    {
+      "index": 79,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\79_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -0.003653218038380146,
+      "Net_improve": -1.56,
+      "Net_regression": -0.4224690794944763
+    },
+    {
+      "index": 80,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\80_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -0.004116710741072893,
+      "Net_improve": 0.0,
+      "Net_regression": -0.5726330280303955
+    },
+    {
+      "index": 81,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\81_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -1.576188564300537,
+      "Net_improve": -1.56,
+      "Net_regression": -0.5779368281364441
+    },
+    {
+      "index": 82,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\82_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -1.5749032497406006,
+      "Net_improve": -1.56,
+      "Net_regression": -0.11250722408294678
+    },
+    {
+      "index": 83,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\83_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -1.5774353742599487,
+      "Net_improve": -1.56,
+      "Net_regression": -0.539295494556427
+    },
+    {
+      "index": 84,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\84_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -1.582227349281311,
+      "Net_improve": -1.56,
+      "Net_regression": -0.6329377889633179
+    },
+    {
+      "index": 85,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\85_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -1.5720865726470947,
+      "Net_improve": -1.56,
+      "Net_regression": -1.0409631729125977
+    },
+    {
+      "index": 86,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\86_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -1.5722179412841797,
+      "Net_improve": -1.56,
+      "Net_regression": -0.8111299276351929
+    },
+    {
+      "index": 87,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\87_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -1.5725164413452148,
+      "Net_improve": -1.56,
+      "Net_regression": -0.933453381061554
+    },
+    {
+      "index": 88,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\88_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -1.5742833614349365,
+      "Net_improve": -1.56,
+      "Net_regression": -1.1023519039154053
+    },
+    {
+      "index": 89,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\89_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -1.573948621749878,
+      "Net_improve": -1.56,
+      "Net_regression": -1.4369652271270752
+    },
+    {
+      "index": 90,
+      "image": "E:\\桌面\\kunmingr2\\kunmingr2\\2\\2\\90_0.0000.jpg",
+      "groundTruth": 0.0,
+      "Net_class": -1.578542709350586,
+      "Net_improve": -1.58,
+      "Net_regression": -1.3708622455596924
+    }
+  ]
+}
