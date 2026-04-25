@@ -1,9 +1,9 @@
-﻿"""Run training jobs in a background worker and sync progress to SQLite/memory."""
+"""Run training jobs in a background worker and sync progress to SQLite/memory."""
 
 from __future__ import annotations
 
-import json
 import importlib
+import json
 import os
 import re
 import shutil
@@ -19,26 +19,38 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-from app import database as db
-from app.config import settings
-from app.state import append_loss_point, get_controls, get_progress, merge_progress, release_controls
-from app.training_artifacts import write_progress_snapshot
-from datasets import AutoDriveDataset, AutoDriveListDataset
-from models import AutoDriveNet
-from utils import AverageMeter
-
 CURRENT_DIR = Path(__file__).resolve().parent
 NET_WEB_DIR = CURRENT_DIR.parents[0]
-REPO_ROOT = CURRENT_DIR.parents[2]
-for candidate in (NET_WEB_DIR, REPO_ROOT):
+PROJECT_DIR = CURRENT_DIR.parents[1]
+WORKSPACE_ROOT = CURRENT_DIR.parents[2]
+for candidate in (NET_WEB_DIR, PROJECT_DIR, WORKSPACE_ROOT):
     if str(candidate) not in sys.path:
         sys.path.insert(0, str(candidate))
 
+from app import database as db
+from app.config import settings
+from app.state import append_loss_point, get_controls, get_progress, merge_progress, release_controls
+from app.training_artifacts import read_training_summary, write_progress_snapshot, write_training_summary
+from datasets import AutoDriveDataset, AutoDriveListDataset
+from models import AutoDriveLegacyNet, AutoDriveNet, AutoDriveNetTemporal
 from steering_augmentations import AugConfig, build_eval_transforms, build_stress_transforms, build_train_transforms
-from steering_preprocess import PreprocessConfig, build_angle_vocab, encode_angles_to_vocab
+from steering_preprocess import (
+    PreprocessConfig,
+    build_angle_vocab,
+    encode_angles_to_vocab,
+    preprocess_config_to_dict,
+)
+from utils import AverageMeter
 
 
-def _build_regression_aug_config() -> AugConfig:
+def _env_bool(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
+def _build_regression_aug_config(*, num_frames: int) -> AugConfig:
     preprocess = PreprocessConfig(
         color_space=os.getenv("VENET_PREPROCESS_COLOR_SPACE", "hsv").strip().lower(),
         input_size=(
@@ -54,12 +66,32 @@ def _build_regression_aug_config() -> AugConfig:
     )
     if len(style_mix_ratio) != 3:
         style_mix_ratio = (0.5, 0.3, 0.2)
-    return AugConfig(preprocess=preprocess, style_mix_ratio=style_mix_ratio)
+    return AugConfig(preprocess=preprocess, style_mix_ratio=style_mix_ratio, num_frames=num_frames)
 
 
-def _build_regression_transforms() -> tuple[Any, Any, Any]:
-    cfg = _build_regression_aug_config()
-    return build_train_transforms(cfg), build_eval_transforms(cfg), build_stress_transforms(cfg)
+def _build_regression_transforms(*, num_frames: int) -> tuple[Any, Any, Any, PreprocessConfig]:
+    cfg = _build_regression_aug_config(num_frames=num_frames)
+    return (
+        build_train_transforms(cfg),
+        build_eval_transforms(cfg),
+        build_stress_transforms(cfg),
+        cfg.preprocess,
+    )
+
+
+def _extract_batch(batch):
+    if isinstance(batch, (list, tuple)) and len(batch) >= 2:
+        return batch[0], batch[1]
+    raise TypeError(f"unsupported batch type: {type(batch)!r}")
+
+
+def _forward_model(model: nn.Module, imgs: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor | None]:
+    try:
+        pred, aux_logits = model(imgs, return_aux=True)
+    except TypeError:
+        pred = model(imgs)
+        aux_logits = None
+    return pred, aux_logits
 
 
 def _train_epoch(
@@ -77,17 +109,20 @@ def _train_epoch(
     model.train()
     loss_meter = AverageMeter()
     mae_meter = AverageMeter()
-    for imgs, labels in loader:
+    for batch in loader:
         if should_stop():
             break
-        imgs = imgs.to(device)
-        labels = labels.to(device)
-        aux_targets = encode_angles_to_vocab(labels.view(-1), angle_vocab, device=device)
-        pred, aux_logits = model(imgs, return_aux=True)
+        imgs, labels = _extract_batch(batch)
+        imgs = imgs.to(device, non_blocking=True)
+        labels = labels.to(device, non_blocking=True)
+        pred, aux_logits = _forward_model(model, imgs)
         reg_loss = reg_criterion(pred, labels)
-        aux_loss = aux_criterion(aux_logits, aux_targets)
+        aux_loss = reg_loss.new_tensor(0.0)
+        if aux_logits is not None and aux_cls_weight > 0:
+            aux_targets = encode_angles_to_vocab(labels.view(-1), angle_vocab, device=device)
+            aux_loss = aux_criterion(aux_logits, aux_targets)
         loss = reg_loss + aux_cls_weight * aux_loss
-        optimizer.zero_grad()
+        optimizer.zero_grad(set_to_none=True)
         loss.backward()
         if grad_clip > 0:
             nn.utils.clip_grad_norm_(model.parameters(), max_norm=grad_clip)
@@ -111,13 +146,16 @@ def _evaluate_regression(
     loss_meter = AverageMeter()
     mae_meter = AverageMeter()
     with torch.no_grad():
-        for imgs, labels in loader:
-            imgs = imgs.to(device)
-            labels = labels.to(device)
-            aux_targets = encode_angles_to_vocab(labels.view(-1), angle_vocab, device=device)
-            pred, aux_logits = model(imgs, return_aux=True)
+        for batch in loader:
+            imgs, labels = _extract_batch(batch)
+            imgs = imgs.to(device, non_blocking=True)
+            labels = labels.to(device, non_blocking=True)
+            pred, aux_logits = _forward_model(model, imgs)
             reg_loss = reg_criterion(pred, labels)
-            aux_loss = aux_criterion(aux_logits, aux_targets)
+            aux_loss = reg_loss.new_tensor(0.0)
+            if aux_logits is not None and aux_cls_weight > 0:
+                aux_targets = encode_angles_to_vocab(labels.view(-1), angle_vocab, device=device)
+                aux_loss = aux_criterion(aux_logits, aux_targets)
             loss = reg_loss + aux_cls_weight * aux_loss
             mae = (pred - labels).abs().mean().item()
             loss_meter.update(loss.item(), imgs.size(0))
@@ -125,18 +163,7 @@ def _evaluate_regression(
     return loss_meter.avg, mae_meter.avg
 
 
-def _read_training_summary(summary_path: Path) -> dict[str, Any]:
-    if not summary_path.is_file():
-        return {}
-    try:
-        data = json.loads(summary_path.read_text(encoding="utf-8"))
-    except Exception:
-        return {}
-    return data if isinstance(data, dict) else {}
-
-
 def _wait_resume(ctrl) -> bool:
-    """Return False if training should stop while paused."""
     while ctrl.pause.is_set() and not ctrl.stop.is_set():
         time.sleep(0.2)
     return not ctrl.stop.is_set()
@@ -212,7 +239,6 @@ def _run_subprocess_or_raise(args: list[str], cwd: Path, on_stdout_line=None) ->
 
 
 def _ensure_cyclegan_runtime_deps() -> None:
-    """Ensure optional CycleGAN Python dependencies are available."""
     missing: list[str] = []
     for mod in ("dominate",):
         try:
@@ -224,6 +250,13 @@ def _ensure_cyclegan_runtime_deps() -> None:
         raise RuntimeError(
             f"Missing CycleGAN dependencies: {deps}. Please run `pip install {deps}` or `pip install -r requirements.txt` in the Net_Web environment."
         )
+
+
+def _relative_parent(path: Path, root: Path) -> Path:
+    try:
+        return path.parent.resolve().relative_to(root.resolve())
+    except Exception:
+        return Path(path.parent.name)
 
 
 def _build_c_dataset_with_cyclegan(
@@ -242,11 +275,11 @@ def _build_c_dataset_with_cyclegan(
 ) -> tuple[Path, Path]:
     project = settings.cyclegan_project_root
     if not project.is_dir():
-        raise RuntimeError(f"CycleGAN 椤圭洰鐩綍涓嶅瓨鍦? {project}")
+        raise RuntimeError(f"CycleGAN project directory does not exist: {project}")
     train_py = project / "train.py"
     test_py = project / "test.py"
     if not train_py.is_file() or not test_py.is_file():
-        raise RuntimeError("鏈壘鍒?CycleGAN train.py 鎴?test.py")
+        raise RuntimeError("CycleGAN train.py or test.py not found")
     _ensure_cyclegan_runtime_deps()
 
     job_id = f"task_{uuid.uuid4().hex[:8]}"
@@ -259,14 +292,29 @@ def _build_c_dataset_with_cyclegan(
     c_dir = work_dir / "dataset_c"
     c_dir.mkdir(parents=True, exist_ok=True)
 
-    train_pairs_a = _read_list_pairs(dataset_root_a / "train.txt")
-    train_pairs_b = _read_list_pairs(dataset_root_b / "train.txt")
+    train_pairs_a = _read_list_pairs(_resolve_split_file(dataset_root_a, "train"))
+    train_pairs_b = _read_list_pairs(_resolve_split_file(dataset_root_b, "train"))
     if not train_pairs_a or not train_pairs_b:
-        raise RuntimeError("A/B 鏁版嵁闆?train.txt 涓虹┖锛屾棤娉曟墽琛屽煙澧炲己")
+        raise RuntimeError("A/B 数据集 train split 为空，无法执行域增强")
 
     _copy_pairs_as_images(train_pairs_a, train_a_dir, "a")
     _copy_pairs_as_images(train_pairs_b, train_b_dir, "b")
-    infer_pairs = _copy_pairs_as_images(train_pairs_a, infer_a_dir, "infer")
+
+    infer_a_dir.mkdir(parents=True, exist_ok=True)
+    infer_pairs: list[dict[str, Any]] = []
+    for idx, (src, angle) in enumerate(train_pairs_a):
+        ext = src.suffix.lower() if src.suffix else ".jpg"
+        infer_name = f"infer_{idx:06d}{ext}"
+        shutil.copy2(src, infer_a_dir / infer_name)
+        infer_pairs.append(
+            {
+                "inferName": infer_name,
+                "angle": angle,
+                "sourcePath": os.fspath(src.resolve()),
+                "sourceName": src.name,
+                "relativeParent": os.fspath(_relative_parent(src, dataset_root_a)),
+            }
+        )
 
     common = [
         "--dataroot",
@@ -307,13 +355,12 @@ def _build_c_dataset_with_cyclegan(
     def _on_train_line(line: str) -> None:
         if on_train_progress is None:
             return
-        m = epoch_re.search(line)
-        if not m:
+        match = epoch_re.search(line)
+        if not match:
             return
-        cur = int(m.group(1))
-        total = int(m.group(2)) if int(m.group(2)) > 0 else total_train_epochs
+        cur = int(match.group(1))
+        total = int(match.group(2)) if int(match.group(2)) > 0 else total_train_epochs
         ratio = max(0.0, min(1.0, cur / max(total, 1)))
-        # Domain augmentation stage allocates 5%~95% for CycleGAN train.
         on_train_progress(5.0 + ratio * 90.0, f"CycleGAN epoch {cur}/{total}")
 
     _run_subprocess_or_raise(train_args, project, on_stdout_line=_on_train_line)
@@ -344,10 +391,10 @@ def _build_c_dataset_with_cyclegan(
         str(cyclegan_crop_size),
     ]
     if on_train_progress is not None:
-        on_train_progress(97.0, "CycleGAN璁粌瀹屾垚锛屾鍦ㄧ敓鎴?C 鏁版嵁")
+        on_train_progress(97.0, "CycleGAN 训练完成，正在生成 C 域数据")
     _run_subprocess_or_raise(infer_args, project)
     if on_train_progress is not None:
-        on_train_progress(100.0, "C 鏁版嵁鐢熸垚瀹屾垚")
+        on_train_progress(100.0, "C 域数据生成完成")
 
     image_dir = outputs_dir / job_id / "test_latest" / "images"
     if not image_dir.is_dir():
@@ -356,220 +403,160 @@ def _build_c_dataset_with_cyclegan(
     c_list = artifacts_dir / "train_c.txt"
     pairs_meta: list[dict[str, Any]] = []
     with open(c_list, "w", encoding="utf-8") as f:
-        for idx, (src_name, angle) in enumerate(infer_pairs):
-            fake_name = f"{Path(src_name).stem}_fake.png"
+        for idx, pair in enumerate(infer_pairs):
+            source_path = Path(pair["sourcePath"])
+            fake_name = f"{Path(pair['inferName']).stem}_fake.png"
             fake_path = image_dir / fake_name
             if not fake_path.is_file():
-                raise RuntimeError(f"鏈壘鍒扮敓鎴愬浘鍍? {fake_name}")
-            dst = c_dir / fake_name
+                raise RuntimeError(f"CycleGAN generated image missing: {fake_name}")
+
+            relative_parent = Path(pair["relativeParent"])
+            dst_dir = c_dir / relative_parent
+            dst_dir.mkdir(parents=True, exist_ok=True)
+            dst_name = source_path.with_suffix(".png").name
+            dst = dst_dir / dst_name
             shutil.copy2(fake_path, dst)
-            f.write(f"{os.fspath(dst.resolve())} {angle}\n")
+            f.write(f"{os.fspath(dst.resolve())} {pair['angle']}\n")
             pairs_meta.append(
                 {
                     "index": idx,
-                    "aName": src_name,
-                    "cName": fake_name,
-                    "aPath": os.fspath((infer_a_dir / src_name).resolve()),
+                    "aName": os.fspath(relative_parent / source_path.name),
+                    "cName": os.fspath(relative_parent / dst_name),
+                    "aPath": os.fspath(source_path.resolve()),
                     "cPath": os.fspath(dst.resolve()),
                 }
             )
     pairs_json = artifacts_dir / "domain_aug_pairs.json"
     with open(pairs_json, "w", encoding="utf-8") as pf:
-        pf.write(json.dumps(pairs_meta, ensure_ascii=False))
+        pf.write(json.dumps(pairs_meta, ensure_ascii=False, indent=2))
     return c_list, pairs_json
 
 
-def _run_competition_model_training(
+def _normalize_model_variant(raw: str | None) -> str:
+    value = (raw or "").strip().lower()
+    if value == "legacy":
+        return "legacy"
+    if value in {"temporal3", "mobilenet_temporal3", "mobilenet_v2_temporal3"}:
+        return "temporal3"
+    return "mobilenet_v2"
+
+
+def _resolve_num_frames(model_variant: str) -> int:
+    return 3 if model_variant == "temporal3" else 1
+
+
+def _resolve_split_candidates(split_name: str) -> list[str]:
+    key = split_name.lower()
+    if key == "train":
+        return ["train_clean.txt", "train.txt"]
+    if key == "val":
+        return ["val_clean.txt", "val.txt"]
+    if key == "test":
+        return ["test_clean.txt", "test.txt"]
+    return [f"{key}.txt"]
+
+
+def _resolve_split_file(dataset_root: Path, split_name: str) -> Path:
+    for candidate in _resolve_split_candidates(split_name):
+        path = dataset_root / candidate
+        if path.is_file():
+            return path
+    tried = ", ".join(str(dataset_root / name) for name in _resolve_split_candidates(split_name))
+    raise FileNotFoundError(f"split file not found for {split_name}; tried: {tried}")
+
+
+def _has_split_file(dataset_root: Path, split_name: str) -> bool:
+    return any((dataset_root / candidate).is_file() for candidate in _resolve_split_candidates(split_name))
+
+
+def _build_model_for_variant(
+    model_variant: str,
     *,
-    model_name: str,
-    script_dir: Path,
-    dataset_root: str,
-    batch_size: int,
-    epochs: int,
+    num_aux_classes: int,
+    use_pretrained: bool,
+    num_frames: int,
+) -> nn.Module:
+    if model_variant == "legacy":
+        return AutoDriveLegacyNet()
+    if model_variant == "temporal3":
+        return AutoDriveNetTemporal(
+            num_aux_classes=num_aux_classes,
+            use_pretrained=use_pretrained,
+            num_frames=num_frames,
+        )
+    return AutoDriveNet(num_aux_classes=num_aux_classes, use_pretrained=use_pretrained)
+
+
+def _configure_optimizer(
+    model: nn.Module,
+    *,
     learning_rate: float,
-    out_dir: Path,
-    ckpt_name: str,
-    branch_name: str,
-    task_id: str,
-    on_progress,
-) -> dict[str, Any]:
-    train_py = script_dir / "train.py"
-    if not train_py.is_file():
-        raise RuntimeError(f"{model_name} training script not found: {train_py}")
-    out_dir.mkdir(parents=True, exist_ok=True)
-    env = os.environ.copy()
-    env.update(
-        {
-            "VENET_DATA_FOLDER": dataset_root,
-            "VENET_BATCH_SIZE": str(batch_size),
-            "VENET_EPOCHS": str(epochs),
-            "VENET_LR": str(learning_rate),
-            "VENET_OUTPUT_DIR": os.fspath(out_dir.resolve()),
-            "VENET_SAVE_NAME": ckpt_name,
-            "VENET_BEST_SAVE_NAME": f"best_{ckpt_name}",
-            "VENET_LOG_DIR": os.fspath((out_dir / "runs").resolve()),
-            "VENET_EARLY_STOP_PATIENCE": os.getenv("VENET_EARLY_STOP_PATIENCE", "12"),
-            "VENET_EARLY_STOP_MIN_DELTA": os.getenv("VENET_EARLY_STOP_MIN_DELTA", "1e-4"),
-            "VENET_WEIGHT_DECAY": os.getenv("VENET_WEIGHT_DECAY", "1e-4"),
-            "VENET_GRAD_CLIP": os.getenv("VENET_GRAD_CLIP", "3.0"),
-            "PYTHONUNBUFFERED": "1",
-        }
+    weight_decay: float,
+    backbone_lr_factor: float,
+    freeze_backbone: bool,
+    lr_patience: int,
+) -> tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.ReduceLROnPlateau]:
+    if not hasattr(model, "set_backbone_trainable"):
+        optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
+    else:
+        model.set_backbone_trainable(not freeze_backbone)
+        if freeze_backbone:
+            optimizer = torch.optim.AdamW(model.head_parameters(), lr=learning_rate, weight_decay=weight_decay)
+        else:
+            optimizer = torch.optim.AdamW(
+                [
+                    {"params": list(model.head_parameters()), "lr": learning_rate},
+                    {"params": list(model.backbone_parameters()), "lr": learning_rate * backbone_lr_factor},
+                ],
+                weight_decay=weight_decay,
+            )
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer,
+        mode="min",
+        factor=0.5,
+        patience=max(2, lr_patience),
+        min_lr=1e-6,
     )
-    r_classic = re.compile(r"epoch:\s*(\d+)")
-    r_lite = re.compile(r"Epoch\s+(\d+)\s+\|")
-    r_classic_train_loss = re.compile(r"CE_Loss:\s*([0-9.eE+-]+)")
-    r_classic_val_loss = re.compile(r"Val_CE_Loss:\s*([0-9.eE+-]+)")
-    r_classic_train_acc = re.compile(r"Train_Acc:\s*([0-9.eE+-]+)")
-    r_classic_val_acc = re.compile(r"Val_Acc:\s*([0-9.eE+-]+)")
-    r_classic_train_mae = re.compile(r"Train_Angle_MAE:\s*([0-9.eE+-]+)")
-    r_classic_val_mae = re.compile(r"Val_Angle_MAE:\s*([0-9.eE+-]+)")
-    r_classic_val_stress_mae = re.compile(r"Val_Stress_Angle_MAE:\s*([0-9.eE+-]+)")
-    r_lite_train_loss = re.compile(r"TrainLoss\s+([0-9.eE+-]+)")
-    r_lite_train_acc = re.compile(r"TrainAcc\s+([0-9.eE+-]+)")
-    r_lite_val_loss = re.compile(r"ValLoss\s+([0-9.eE+-]+)")
-    r_lite_val_acc = re.compile(r"ValAcc\s+([0-9.eE+-]+)")
-    r_lite_train_mae = re.compile(r"TrainAngleMAE\s+([0-9.eE+-]+)")
-    r_lite_val_mae = re.compile(r"ValAngleMAE\s+([0-9.eE+-]+)")
-    r_lite_val_stress_mae = re.compile(r"ValStressAngleMAE\s+([0-9.eE+-]+)")
-    metrics: dict[str, Any] = {
-        "finalTrainLoss": None,
-        "finalValLoss": None,
-        "finalTrainAcc": None,
-        "finalValAcc": None,
-        "finalTrainAngleMAE": None,
-        "finalValAngleMAE": None,
-        "finalValStressAngleMAE": None,
-        "steeringError": None,
-        "requestedEpochs": epochs,
-        "completedEpochs": None,
-        "bestEpoch": None,
-        "stoppedEpoch": None,
-        "earlyStopped": False,
+    return optimizer, scheduler
+
+
+def _make_checkpoint_payload(
+    *,
+    epoch: int,
+    best_epoch: int,
+    best_metric: float,
+    angle_vocab: list[float],
+    preprocess: PreprocessConfig,
+    model_variant: str,
+    base_model: nn.Module,
+    num_frames: int,
+    frame_stride: int,
+) -> dict[str, Any]:
+    state_dict = {key: value.detach().cpu() for key, value in base_model.state_dict().items()}
+    return {
+        "epoch": epoch,
+        "bestEpoch": best_epoch,
+        "bestSelectionMetric": best_metric,
+        "model": state_dict,
+        "modelRaw": state_dict,
+        "angleVocab": angle_vocab,
+        "modelVariant": model_variant,
+        "preprocess": preprocess_config_to_dict(preprocess),
+        "pretrainedLoaded": bool(getattr(base_model, "pretrained_loaded", False)),
+        "numFrames": int(num_frames),
+        "frameStride": int(frame_stride),
     }
 
-    def _on_line(line: str) -> None:
-        m = r_classic.search(line) or r_lite.search(line)
-        if not m:
-            return
-        cur = int(m.group(1))
-        ratio = max(0.0, min(1.0, cur / max(epochs, 1)))
-        on_progress(ratio * 100.0, f"{model_name} epoch {cur}/{epochs}")
 
-        t_loss = None
-        v_loss = None
-        t_acc = None
-        v_acc = None
-        t_mae = None
-        v_mae = None
-
-        m1 = r_classic_train_loss.search(line)
-        if m1:
-            t_loss = float(m1.group(1))
-        m2 = r_classic_val_loss.search(line)
-        if m2:
-            v_loss = float(m2.group(1))
-        m3 = r_classic_train_acc.search(line)
-        if m3:
-            t_acc = float(m3.group(1))
-        m4 = r_classic_val_acc.search(line)
-        if m4:
-            v_acc = float(m4.group(1))
-        m5 = r_classic_train_mae.search(line)
-        if m5:
-            t_mae = float(m5.group(1))
-        m6 = r_classic_val_mae.search(line)
-        if m6:
-            v_mae = float(m6.group(1))
-
-        m7 = r_lite_train_loss.search(line)
-        if m7:
-            t_loss = float(m7.group(1))
-        m8 = r_lite_val_loss.search(line)
-        if m8:
-            v_loss = float(m8.group(1))
-        m9 = r_lite_train_acc.search(line)
-        if m9:
-            t_acc = float(m9.group(1))
-        m10 = r_lite_val_acc.search(line)
-        if m10:
-            v_acc = float(m10.group(1))
-
-        if t_loss is not None:
-            metrics["finalTrainLoss"] = t_loss
-        if v_loss is not None:
-            metrics["finalValLoss"] = v_loss
-        if t_acc is not None:
-            metrics["finalTrainAcc"] = t_acc
-        if v_acc is not None:
-            metrics["finalValAcc"] = v_acc
-        if t_mae is not None:
-            metrics["finalTrainAngleMAE"] = t_mae
-        if v_mae is not None:
-            metrics["finalValAngleMAE"] = v_mae
-        if v_mae is not None:
-            metrics["steeringError"] = v_mae
-        elif t_mae is not None:
-            metrics["steeringError"] = t_mae
-
-        use_train_loss = t_loss
-        use_val_loss = v_loss if v_loss is not None else t_loss
-        if use_train_loss is not None and use_val_loss is not None:
-            append_loss_point(task_id, branch_name, cur, float(use_train_loss), float(use_val_loss))
-
-    proc = subprocess.Popen(
-        [sys.executable, str(train_py)],
-        cwd=str(script_dir),
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        encoding="utf-8",
-        errors="ignore",
-    )
-    out_lines: list[str] = []
-    err_lines: list[str] = []
-    assert proc.stdout is not None
-    for line in proc.stdout:
-        s = line.rstrip("\n")
-        out_lines.append(s)
-        _on_line(s)
-    assert proc.stderr is not None
-    for line in proc.stderr:
-        err_lines.append(line.rstrip("\n"))
-    code = proc.wait()
-    if code != 0:
-        raise RuntimeError(
-            f"{model_name} training failed(exit={code})\nSTDERR:\n{chr(10).join(err_lines)[:3000]}"
-            f"\nSTDOUT:\n{chr(10).join(out_lines)[:3000]}"
-        )
-    on_progress(100.0, f"{model_name} training completed")
-    if metrics["finalTrainLoss"] is None:
-        metrics["finalTrainLoss"] = 0.0
-    if metrics["finalValLoss"] is None:
-        metrics["finalValLoss"] = float(metrics["finalTrainLoss"] or 0.0)
-    if metrics["steeringError"] is None:
-        metrics["steeringError"] = float(metrics["finalValAngleMAE"] or metrics["finalTrainAngleMAE"] or 0.0)
-    summary = _read_training_summary(out_dir / "training_summary.json")
-    for key in (
-        "requestedEpochs",
-        "completedEpochs",
-        "bestEpoch",
-        "stoppedEpoch",
-        "earlyStopped",
-        "finalTrainLoss",
-        "finalValLoss",
-        "steeringError",
-        "finalTrainAcc",
-        "finalValAcc",
-        "finalTrainAngleMAE",
-        "finalValAngleMAE",
-        "bestValLoss",
-        "testBestLoss",
-        "testBestAcc",
-    ):
-        if key in summary:
-            metrics[key] = summary[key]
-    return metrics
+def _load_task_params(task_id: str, user_id: str) -> dict[str, Any]:
+    row = db.get_task(task_id, user_id)
+    if row is None or "task_params_json" not in row.keys() or not row["task_params_json"]:
+        return {}
+    try:
+        payload = json.loads(row["task_params_json"])
+    except Exception:
+        return {}
+    return payload if isinstance(payload, dict) else {}
 
 
 def training_worker(
@@ -589,60 +576,54 @@ def training_worker(
     cyclegan_load_size: int,
     cyclegan_crop_size: int,
     cyclegan_lambda_identity: float,
-    use_competition_class_model: bool,
-    use_competition_lite_model: bool,
+    model_variant: str,
     artifacts_dir: Path,
 ) -> None:
     ctrl = get_controls(task_id)
     if ctrl is None:
         return
 
-    # 浠ユ暟鎹簱涓殑浠诲姟蹇収涓哄噯锛岄伩鍏嶇嚎绋嬪弬鏁颁笌鎸佷箙鍖栭厤缃笉涓€鑷淬€?
-    row0 = db.get_task(task_id, user_id)
-    if row0 is not None and "task_params_json" in row0.keys() and row0["task_params_json"]:
-        try:
-            p0 = json.loads(row0["task_params_json"])
-            use_competition_class_model = bool(p0.get("useCompetitionClassModel", use_competition_class_model))
-            use_competition_lite_model = bool(p0.get("useCompetitionLiteModel", use_competition_lite_model))
-        except Exception:
-            pass
+    task_params = _load_task_params(task_id, user_id)
+    model_variant = _normalize_model_variant(task_params.get("modelVariant", model_variant))
+    num_frames = _resolve_num_frames(model_variant)
+    frame_stride = 1
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     total_ui_epochs = epochs * (2 if domain_augmentation else 1)
-    if use_competition_class_model:
-        total_ui_epochs += epochs
-    if use_competition_lite_model:
-        total_ui_epochs += epochs
-    patch: dict[str, Any] = {
-        "status": "running",
-        "totalEpochs": total_ui_epochs,
-        "currentEpoch": 0,
-        "message": f"璁惧: {device}",
-        "baselineProgress": 0.0,
-        "domainAugmentationProgress": (0.0 if domain_augmentation else None),
-        "domainAugmentationText": ("等待开始" if domain_augmentation else None),
-        "augmentedProgress": (0.0 if domain_augmentation else None),
-        "competitionClassProgress": (0.0 if use_competition_class_model else None),
-        "competitionClassText": ("等待开始" if use_competition_class_model else None),
-        "competitionLiteProgress": (0.0 if use_competition_lite_model else None),
-        "competitionLiteText": ("等待开始" if use_competition_lite_model else None),
-    }
-    if domain_augmentation:
-        patch["augmented"] = {"trainLossSeries": [], "valLossSeries": []}
-    else:
-        patch["augmented"] = None
-    merge_progress(task_id, patch)
+    merge_progress(
+        task_id,
+        {
+            "status": "running",
+            "totalEpochs": total_ui_epochs,
+            "currentEpoch": 0,
+            "message": f"设备: {device.type} | 架构: {model_variant}",
+            "baselineProgress": 0.0,
+            "domainAugmentationProgress": (0.0 if domain_augmentation else None),
+            "domainAugmentationText": ("等待开始" if domain_augmentation else None),
+            "augmentedProgress": (0.0 if domain_augmentation else None),
+            "augmented": ({"trainLossSeries": [], "valLossSeries": []} if domain_augmentation else None),
+        },
+    )
 
-    train_transform, eval_transform, stress_transform = _build_regression_transforms()
+    train_transform, eval_transform, stress_transform, preprocess = _build_regression_transforms(num_frames=num_frames)
     reg_criterion = nn.SmoothL1Loss().to(device)
     aux_criterion = nn.CrossEntropyLoss().to(device)
     aux_cls_weight = float(os.getenv("VENET_AUX_CLS_WEIGHT", "0.3"))
+    use_pretrained = _env_bool("VENET_USE_PRETRAINED", True)
     weight_decay = float(os.getenv("VENET_WEIGHT_DECAY", "1e-4"))
     grad_clip = float(os.getenv("VENET_GRAD_CLIP", "3.0"))
     early_stop_patience = int(os.getenv("VENET_EARLY_STOP_PATIENCE", "12"))
     early_stop_min_delta = float(os.getenv("VENET_EARLY_STOP_MIN_DELTA", "1e-4"))
     freeze_backbone_epochs = int(os.getenv("VENET_FREEZE_BACKBONE_EPOCHS", "5"))
     backbone_lr_factor = float(os.getenv("VENET_BACKBONE_LR_FACTOR", "0.1"))
+    lr_patience = max(2, early_stop_patience // 3)
+
+    if model_variant == "legacy":
+        use_pretrained = False
+        freeze_backbone_epochs = 0
+        aux_cls_weight = 0.0
+
+    dataset_root_path = Path(dataset_root)
     artifacts_dir.mkdir(parents=True, exist_ok=True)
     baseline_path = artifacts_dir / "baseline.pth"
     augmented_path = artifacts_dir / "augmented.pth"
@@ -655,28 +636,46 @@ def training_worker(
     mae_a = 0.0
     best_baseline_epoch = 0
     best_baseline_loss: float | None = None
+    best_baseline_mae = float("inf")
     baseline_completed_epochs = 0
     baseline_stopped_epoch: int | None = None
     baseline_early_stopped = False
     baseline_test_loss = 0.0
     best_augmented_epoch = 0
     best_augmented_loss: float | None = None
+    best_augmented_mae = float("inf")
     augmented_completed_epochs = 0
     augmented_stopped_epoch: int | None = None
     augmented_early_stopped = False
     augmented_test_loss = 0.0
-    comp_class_metrics: dict[str, Any] | None = None
-    comp_lite_metrics: dict[str, Any] | None = None
-    comp_class_note: str | None = None
-    comp_lite_note: str | None = None
+    has_test_split = _has_split_file(dataset_root_path, "test")
 
     try:
         db.update_task_status(task_id, user_id, "running", None)
 
-                # ----- 基准模型 -----
-        train_ds = AutoDriveDataset(dataset_root, "train", train_transform)
-        val_ds = AutoDriveDataset(dataset_root, "val", eval_transform)
-        val_stress_ds = AutoDriveDataset(dataset_root, "val", stress_transform, deterministic_seed=20260418)
+        dataset_kwargs = {"num_frames": num_frames, "frame_stride": frame_stride}
+        train_ds = AutoDriveDataset(
+            dataset_root,
+            "train",
+            train_transform,
+            split_name="train_clean",
+            **dataset_kwargs,
+        )
+        val_ds = AutoDriveDataset(
+            dataset_root,
+            "val",
+            eval_transform,
+            split_name="val_clean",
+            **dataset_kwargs,
+        )
+        val_stress_ds = AutoDriveDataset(
+            dataset_root,
+            "val",
+            stress_transform,
+            deterministic_seed=20260418,
+            split_name="val_clean",
+            **dataset_kwargs,
+        )
         angle_vocab = build_angle_vocab(train_ds.angles)
         train_loader = DataLoader(
             train_ds,
@@ -699,9 +698,17 @@ def training_worker(
             num_workers=0,
             pin_memory=torch.cuda.is_available(),
         )
-        test_file = Path(dataset_root) / "test.txt"
-        has_test_split = test_file.is_file()
-        test_ds = AutoDriveDataset(dataset_root, "test", eval_transform) if has_test_split else val_ds
+        test_ds = (
+            AutoDriveDataset(
+                dataset_root,
+                "test",
+                eval_transform,
+                split_name="test_clean",
+                **dataset_kwargs,
+            )
+            if has_test_split
+            else val_ds
+        )
         test_loader = DataLoader(
             test_ds,
             batch_size=batch_size,
@@ -710,21 +717,17 @@ def training_worker(
             pin_memory=torch.cuda.is_available(),
         )
 
-        model = AutoDriveNet(num_aux_classes=len(angle_vocab), use_pretrained=True).to(device)
-        best_baseline_mae = float("inf")
-        best_baseline_epoch = 0
+        model = _build_model_for_variant(
+            model_variant,
+            num_aux_classes=len(angle_vocab),
+            use_pretrained=use_pretrained,
+            num_frames=num_frames,
+        ).to(device)
         best_baseline_state = None
-        best_baseline_loss = None
-        baseline_completed_epochs = 0
-        baseline_stopped_epoch = None
-        baseline_early_stopped = False
-        baseline_train_mae = 0.0
-        baseline_val_mae = 0.0
-        baseline_val_stress_mae = 0.0
-        baseline_no_improve = 0
         optimizer = None
         scheduler = None
-        current_stage = None
+        current_stage: str | None = None
+        baseline_no_improve = 0
 
         for epoch in range(1, epochs + 1):
             if not _wait_resume(ctrl):
@@ -733,29 +736,21 @@ def training_worker(
                 release_controls(task_id)
                 return
 
-            desired_stage = "head" if epoch <= freeze_backbone_epochs else "full"
-            if desired_stage != current_stage:
-                model.set_backbone_trainable(desired_stage != "head")
-                if desired_stage == "head":
-                    optimizer = torch.optim.AdamW(model.head_parameters(), lr=learning_rate, weight_decay=weight_decay)
-                else:
-                    optimizer = torch.optim.AdamW(
-                        [
-                            {"params": list(model.head_parameters()), "lr": learning_rate},
-                            {"params": list(model.backbone_parameters()), "lr": learning_rate * backbone_lr_factor},
-                        ],
-                        weight_decay=weight_decay,
-                    )
-                scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-                    optimizer,
-                    mode="min",
-                    factor=0.5,
-                    patience=max(2, early_stop_patience // 3),
-                    min_lr=1e-6,
+            desired_stage = "full"
+            if hasattr(model, "set_backbone_trainable") and freeze_backbone_epochs > 0:
+                desired_stage = "head" if epoch <= freeze_backbone_epochs else "full"
+            if optimizer is None or desired_stage != current_stage:
+                optimizer, scheduler = _configure_optimizer(
+                    model,
+                    learning_rate=learning_rate,
+                    weight_decay=weight_decay,
+                    backbone_lr_factor=backbone_lr_factor,
+                    freeze_backbone=(desired_stage == "head"),
+                    lr_patience=lr_patience,
                 )
                 current_stage = desired_stage
 
-            last_train_b, baseline_train_mae = _train_epoch(
+            last_train_b, _baseline_train_mae = _train_epoch(
                 model,
                 train_loader,
                 device,
@@ -773,13 +768,26 @@ def training_worker(
                 release_controls(task_id)
                 return
 
-            last_val_b, baseline_val_mae = _evaluate_regression(
-                model, val_loader, device, reg_criterion, aux_criterion, angle_vocab, aux_cls_weight
+            last_val_b, _baseline_val_mae = _evaluate_regression(
+                model,
+                val_loader,
+                device,
+                reg_criterion,
+                aux_criterion,
+                angle_vocab,
+                aux_cls_weight,
             )
             _, baseline_val_stress_mae = _evaluate_regression(
-                model, val_stress_loader, device, reg_criterion, aux_criterion, angle_vocab, aux_cls_weight
+                model,
+                val_stress_loader,
+                device,
+                reg_criterion,
+                aux_criterion,
+                angle_vocab,
+                aux_cls_weight,
             )
             baseline_completed_epochs = epoch
+            assert scheduler is not None
             scheduler.step(baseline_val_stress_mae)
             append_loss_point(task_id, "baseline", epoch, last_train_b, last_val_b)
             merge_progress(
@@ -788,7 +796,7 @@ def training_worker(
                     "currentEpoch": epoch,
                     "status": "running",
                     "baselineProgress": (epoch / max(epochs, 1)) * 100.0,
-                    "message": f"基准模型 epoch {epoch}/{epochs} | val_stress_mae={baseline_val_stress_mae:.4f}",
+                    "message": f"基准阶段 epoch {epoch}/{epochs} | val_stress_mae={baseline_val_stress_mae:.4f}",
                 },
             )
 
@@ -798,25 +806,59 @@ def training_worker(
                 best_baseline_loss = last_val_b
                 baseline_no_improve = 0
                 best_baseline_state = {k: v.detach().cpu() for k, v in model.state_dict().items()}
-                torch.save({"model": best_baseline_state, "epoch": epoch, "angleVocab": angle_vocab}, baseline_path)
+                torch.save(
+                    _make_checkpoint_payload(
+                        epoch=epoch,
+                        best_epoch=best_baseline_epoch,
+                        best_metric=best_baseline_mae,
+                        angle_vocab=angle_vocab,
+                        preprocess=preprocess,
+                        model_variant=model_variant,
+                        base_model=model,
+                        num_frames=num_frames,
+                        frame_stride=frame_stride,
+                    ),
+                    baseline_path,
+                )
             else:
                 baseline_no_improve += 1
                 if baseline_no_improve >= early_stop_patience:
                     baseline_early_stopped = True
                     baseline_stopped_epoch = epoch
-                    merge_progress(task_id, {"message": f"基准模型早停于 epoch {epoch}"})
+                    merge_progress(task_id, {"message": f"基准阶段早停于 epoch {epoch}"})
                     break
+
+            _persist_progress_snapshot(task_id, artifacts_dir)
 
         if best_baseline_state is None:
             best_baseline_state = {k: v.detach().cpu() for k, v in model.state_dict().items()}
             best_baseline_mae = baseline_val_stress_mae
             best_baseline_epoch = baseline_completed_epochs
             best_baseline_loss = last_val_b
-            torch.save({"model": best_baseline_state, "epoch": baseline_completed_epochs, "angleVocab": angle_vocab}, baseline_path)
+            torch.save(
+                _make_checkpoint_payload(
+                    epoch=baseline_completed_epochs,
+                    best_epoch=best_baseline_epoch,
+                    best_metric=best_baseline_mae,
+                    angle_vocab=angle_vocab,
+                    preprocess=preprocess,
+                    model_variant=model_variant,
+                    base_model=model,
+                    num_frames=num_frames,
+                    frame_stride=frame_stride,
+                ),
+                baseline_path,
+            )
 
         model.load_state_dict(best_baseline_state)
         baseline_test_loss, baseline_test_mae = _evaluate_regression(
-            model, test_loader, device, reg_criterion, aux_criterion, angle_vocab, aux_cls_weight
+            model,
+            test_loader,
+            device,
+            reg_criterion,
+            aux_criterion,
+            angle_vocab,
+            aux_cls_weight,
         )
         mae_b = baseline_test_mae
         db.update_task_checkpoints(task_id, user_id, baseline_ckpt=str(baseline_path))
@@ -825,20 +867,19 @@ def training_worker(
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
-        # ----- 鍩熷寮烘ā鍨嬶紙鍙€夛級-----
         if domain_augmentation:
             merge_progress(
                 task_id,
                 {
                     "augmented": {"trainLossSeries": [], "valLossSeries": []},
-                    "message": "基准模型已完成，开始生成 CycleGAN 数据集 C",
+                    "message": "基准阶段完成，开始生成 CycleGAN 数据集 C",
                 },
             )
             if not dataset_b_root:
-                raise RuntimeError("缂哄皯 B 鍩熸暟鎹泦璺緞")
+                raise RuntimeError("缺少 B 域数据集路径")
             merge_progress(task_id, {"domainAugmentationProgress": 5.0})
             c_list, _pairs_json = _build_c_dataset_with_cyclegan(
-                dataset_root_a=Path(dataset_root),
+                dataset_root_a=dataset_root_path,
                 dataset_root_b=Path(dataset_b_root),
                 artifacts_dir=artifacts_dir,
                 cyclegan_epochs=cyclegan_epochs,
@@ -849,8 +890,12 @@ def training_worker(
                 cyclegan_load_size=cyclegan_load_size,
                 cyclegan_crop_size=cyclegan_crop_size,
                 cyclegan_lambda_identity=cyclegan_lambda_identity,
-                on_train_progress=lambda p, txt: merge_progress(
-                    task_id, {"domainAugmentationProgress": p, "domainAugmentationText": txt}
+                on_train_progress=lambda progress, text: merge_progress(
+                    task_id,
+                    {
+                        "domainAugmentationProgress": progress,
+                        "domainAugmentationText": text,
+                    },
                 ),
             )
             merge_progress(
@@ -858,12 +903,15 @@ def training_worker(
                 {
                     "domainAugmentationProgress": 100.0,
                     "domainAugmentationText": "已完成",
-                    "message": "C 数据集已生成，开始训练增强模型",
+                    "message": "C 域数据集已生成，开始训练增强阶段",
                 },
             )
+
             combined_train = artifacts_dir / "train_augmented.txt"
-            with open(Path(dataset_root) / "train.txt", "r", encoding="utf-8") as fa, open(
-                c_list, "r", encoding="utf-8"
+            with open(_resolve_split_file(dataset_root_path, "train"), "r", encoding="utf-8") as fa, open(
+                c_list,
+                "r",
+                encoding="utf-8",
             ) as fc, open(combined_train, "w", encoding="utf-8") as fout:
                 a_content = fa.read()
                 c_content = fc.read()
@@ -872,9 +920,27 @@ def training_worker(
                     fout.write("\n")
                 fout.write(c_content)
 
-            train_ds_a = AutoDriveListDataset(str(combined_train), train_transform)
-            val_ds_a = AutoDriveDataset(dataset_root, "val", eval_transform)
-            val_stress_ds_a = AutoDriveDataset(dataset_root, "val", stress_transform, deterministic_seed=20260418)
+            train_ds_a = AutoDriveListDataset(
+                str(combined_train),
+                train_transform,
+                num_frames=num_frames,
+                frame_stride=frame_stride,
+            )
+            val_ds_a = AutoDriveDataset(
+                dataset_root,
+                "val",
+                eval_transform,
+                split_name="val_clean",
+                **dataset_kwargs,
+            )
+            val_stress_ds_a = AutoDriveDataset(
+                dataset_root,
+                "val",
+                stress_transform,
+                deterministic_seed=20260418,
+                split_name="val_clean",
+                **dataset_kwargs,
+            )
             angle_vocab_a = build_angle_vocab(train_ds_a.angles)
             train_loader_a = DataLoader(
                 train_ds_a,
@@ -897,7 +963,17 @@ def training_worker(
                 num_workers=0,
                 pin_memory=torch.cuda.is_available(),
             )
-            test_ds_a = AutoDriveDataset(dataset_root, "test", eval_transform) if has_test_split else val_ds_a
+            test_ds_a = (
+                AutoDriveDataset(
+                    dataset_root,
+                    "test",
+                    eval_transform,
+                    split_name="test_clean",
+                    **dataset_kwargs,
+                )
+                if has_test_split
+                else val_ds_a
+            )
             test_loader_a = DataLoader(
                 test_ds_a,
                 batch_size=batch_size,
@@ -906,21 +982,17 @@ def training_worker(
                 pin_memory=torch.cuda.is_available(),
             )
 
-            model_a = AutoDriveNet(num_aux_classes=len(angle_vocab_a), use_pretrained=True).to(device)
-            best_augmented_mae = float("inf")
-            best_augmented_epoch = 0
+            model_a = _build_model_for_variant(
+                model_variant,
+                num_aux_classes=len(angle_vocab_a),
+                use_pretrained=use_pretrained,
+                num_frames=num_frames,
+            ).to(device)
             best_augmented_state = None
-            best_augmented_loss = None
-            augmented_completed_epochs = 0
-            augmented_stopped_epoch = None
-            augmented_early_stopped = False
-            augmented_train_mae = 0.0
-            augmented_val_mae = 0.0
-            augmented_val_stress_mae = 0.0
-            augmented_no_improve = 0
             opt_a = None
             scheduler_a = None
-            current_aug_stage = None
+            current_aug_stage: str | None = None
+            augmented_no_improve = 0
 
             for epoch in range(1, epochs + 1):
                 if not _wait_resume(ctrl):
@@ -929,30 +1001,22 @@ def training_worker(
                     release_controls(task_id)
                     return
 
-                desired_stage = "head" if epoch <= freeze_backbone_epochs else "full"
-                if desired_stage != current_aug_stage:
-                    model_a.set_backbone_trainable(desired_stage != "head")
-                    if desired_stage == "head":
-                        opt_a = torch.optim.AdamW(model_a.head_parameters(), lr=learning_rate, weight_decay=weight_decay)
-                    else:
-                        opt_a = torch.optim.AdamW(
-                            [
-                                {"params": list(model_a.head_parameters()), "lr": learning_rate},
-                                {"params": list(model_a.backbone_parameters()), "lr": learning_rate * backbone_lr_factor},
-                            ],
-                            weight_decay=weight_decay,
-                        )
-                    scheduler_a = torch.optim.lr_scheduler.ReduceLROnPlateau(
-                        opt_a,
-                        mode="min",
-                        factor=0.5,
-                        patience=max(2, early_stop_patience // 3),
-                        min_lr=1e-6,
+                desired_stage = "full"
+                if hasattr(model_a, "set_backbone_trainable") and freeze_backbone_epochs > 0:
+                    desired_stage = "head" if epoch <= freeze_backbone_epochs else "full"
+                if opt_a is None or desired_stage != current_aug_stage:
+                    opt_a, scheduler_a = _configure_optimizer(
+                        model_a,
+                        learning_rate=learning_rate,
+                        weight_decay=weight_decay,
+                        backbone_lr_factor=backbone_lr_factor,
+                        freeze_backbone=(desired_stage == "head"),
+                        lr_patience=lr_patience,
                     )
                     current_aug_stage = desired_stage
 
-                g_ep = epochs + epoch
-                last_train_a, augmented_train_mae = _train_epoch(
+                global_epoch = epochs + epoch
+                last_train_a, _augmented_train_mae = _train_epoch(
                     model_a,
                     train_loader_a,
                     device,
@@ -970,22 +1034,35 @@ def training_worker(
                     release_controls(task_id)
                     return
 
-                last_val_a, augmented_val_mae = _evaluate_regression(
-                    model_a, val_loader_a, device, reg_criterion, aux_criterion, angle_vocab_a, aux_cls_weight
+                last_val_a, _augmented_val_mae = _evaluate_regression(
+                    model_a,
+                    val_loader_a,
+                    device,
+                    reg_criterion,
+                    aux_criterion,
+                    angle_vocab_a,
+                    aux_cls_weight,
                 )
                 _, augmented_val_stress_mae = _evaluate_regression(
-                    model_a, val_stress_loader_a, device, reg_criterion, aux_criterion, angle_vocab_a, aux_cls_weight
+                    model_a,
+                    val_stress_loader_a,
+                    device,
+                    reg_criterion,
+                    aux_criterion,
+                    angle_vocab_a,
+                    aux_cls_weight,
                 )
                 augmented_completed_epochs = epoch
+                assert scheduler_a is not None
                 scheduler_a.step(augmented_val_stress_mae)
                 append_loss_point(task_id, "augmented", epoch, last_train_a, last_val_a)
                 merge_progress(
                     task_id,
                     {
-                        "currentEpoch": g_ep,
+                        "currentEpoch": global_epoch,
                         "status": "running",
                         "augmentedProgress": (epoch / max(epochs, 1)) * 100.0,
-                        "message": f"增强模型 epoch {epoch}/{epochs} | val_stress_mae={augmented_val_stress_mae:.4f}",
+                        "message": f"增强阶段 epoch {epoch}/{epochs} | val_stress_mae={augmented_val_stress_mae:.4f}",
                     },
                 )
 
@@ -995,105 +1072,68 @@ def training_worker(
                     best_augmented_loss = last_val_a
                     augmented_no_improve = 0
                     best_augmented_state = {k: v.detach().cpu() for k, v in model_a.state_dict().items()}
-                    torch.save({"model": best_augmented_state, "epoch": epoch, "angleVocab": angle_vocab_a}, augmented_path)
+                    torch.save(
+                        _make_checkpoint_payload(
+                            epoch=epoch,
+                            best_epoch=best_augmented_epoch,
+                            best_metric=best_augmented_mae,
+                            angle_vocab=angle_vocab_a,
+                            preprocess=preprocess,
+                            model_variant=model_variant,
+                            base_model=model_a,
+                            num_frames=num_frames,
+                            frame_stride=frame_stride,
+                        ),
+                        augmented_path,
+                    )
                 else:
                     augmented_no_improve += 1
                     if augmented_no_improve >= early_stop_patience:
                         augmented_early_stopped = True
                         augmented_stopped_epoch = epoch
-                        merge_progress(task_id, {"message": f"增强模型早停于 epoch {epoch}"})
+                        merge_progress(task_id, {"message": f"增强阶段早停于 epoch {epoch}"})
                         break
+
+                _persist_progress_snapshot(task_id, artifacts_dir)
 
             if best_augmented_state is None:
                 best_augmented_state = {k: v.detach().cpu() for k, v in model_a.state_dict().items()}
                 best_augmented_mae = augmented_val_stress_mae
                 best_augmented_epoch = augmented_completed_epochs
                 best_augmented_loss = last_val_a
-                torch.save({"model": best_augmented_state, "epoch": augmented_completed_epochs, "angleVocab": angle_vocab_a}, augmented_path)
+                torch.save(
+                    _make_checkpoint_payload(
+                        epoch=augmented_completed_epochs,
+                        best_epoch=best_augmented_epoch,
+                        best_metric=best_augmented_mae,
+                        angle_vocab=angle_vocab_a,
+                        preprocess=preprocess,
+                        model_variant=model_variant,
+                        base_model=model_a,
+                        num_frames=num_frames,
+                        frame_stride=frame_stride,
+                    ),
+                    augmented_path,
+                )
 
             model_a.load_state_dict(best_augmented_state)
             augmented_test_loss, augmented_test_mae = _evaluate_regression(
-                model_a, test_loader_a, device, reg_criterion, aux_criterion, angle_vocab_a, aux_cls_weight
+                model_a,
+                test_loader_a,
+                device,
+                reg_criterion,
+                aux_criterion,
+                angle_vocab_a,
+                aux_cls_weight,
             )
             mae_a = augmented_test_mae
             db.update_task_checkpoints(task_id, user_id, augmented_ckpt=str(augmented_path))
 
-        comp_root = settings.competition_project_root
-        if use_competition_class_model:
-            merge_progress(task_id, {"competitionClass": {"trainLossSeries": [], "valLossSeries": []}})
-            merge_progress(task_id, {"competitionClassText": "开始训练分类模型"})
-            try:
-                comp_class_metrics = _run_competition_model_training(
-                    model_name="鍒嗙被妯″瀷",
-                    script_dir=comp_root / "Net_class",
-                    dataset_root=dataset_root,
-                    batch_size=batch_size,
-                    epochs=epochs,
-                    learning_rate=learning_rate,
-                    out_dir=artifacts_dir / "competition_class",
-                    ckpt_name="ve2_competition_class.pth",
-                    branch_name="competitionClass",
-                    task_id=task_id,
-                    on_progress=lambda p, txt: merge_progress(
-                        task_id,
-                        {
-                            "competitionClassProgress": p,
-                            "competitionClassText": txt,
-                            "currentEpoch": min(
-                                total_ui_epochs,
-                                int(round((epochs * (2 if domain_augmentation else 1)) + (p / 100.0) * epochs)),
-                            ),
-                        },
-                    ),
-                )
-            except RuntimeError as e:
-                msg = str(e)
-                comp_class_note = f"澶辫触宸茶烦杩? {msg[:160]}"
-                merge_progress(
-                    task_id,
-                    {
-                        "competitionClassProgress": 100.0,
-                        "competitionClassText": f"澶辫触宸茶烦杩囷細{msg[:80]}",
-                    },
-                )
+            del model_a, opt_a, train_loader_a
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
 
-        if use_competition_lite_model:
-            merge_progress(task_id, {"competitionLite": {"trainLossSeries": [], "valLossSeries": []}})
-            base_ep = epochs * (2 if domain_augmentation else 1) + (epochs if use_competition_class_model else 0)
-            merge_progress(task_id, {"competitionLiteText": "开始训练轻量模型"})
-            try:
-                comp_lite_metrics = _run_competition_model_training(
-                    model_name="杞婚噺妯″瀷",
-                    script_dir=comp_root / "Net_improve",
-                    dataset_root=dataset_root,
-                    batch_size=batch_size,
-                    epochs=epochs,
-                    learning_rate=learning_rate,
-                    out_dir=artifacts_dir / "competition_lite",
-                    ckpt_name="ve2_competition_lite.pth",
-                    branch_name="competitionLite",
-                    task_id=task_id,
-                    on_progress=lambda p, txt: merge_progress(
-                        task_id,
-                        {
-                            "competitionLiteProgress": p,
-                            "competitionLiteText": txt,
-                            "currentEpoch": min(total_ui_epochs, int(round(base_ep + (p / 100.0) * epochs))),
-                        },
-                    ),
-                )
-            except RuntimeError as e:
-                msg = str(e)
-                comp_lite_note = f"澶辫触宸茶烦杩? {msg[:160]}"
-                merge_progress(
-                    task_id,
-                    {
-                        "competitionLiteProgress": 100.0,
-                        "competitionLiteText": f"澶辫触宸茶烦杩囷細{msg[:80]}",
-                    },
-                )
-
-        result = {
+        result: dict[str, Any] = {
             "baseline": {
                 "finalTrainLoss": last_train_b,
                 "finalValLoss": last_val_b,
@@ -1107,6 +1147,9 @@ def training_worker(
                 "valStressMAE": best_baseline_mae,
                 "finalTestLoss": baseline_test_loss,
                 "usedDedicatedTestSplit": has_test_split,
+                "modelVariant": model_variant,
+                "numFrames": num_frames,
+                "frameStride": frame_stride,
             }
         }
         if domain_augmentation:
@@ -1123,47 +1166,9 @@ def training_worker(
                 "valStressMAE": best_augmented_mae,
                 "finalTestLoss": augmented_test_loss,
                 "usedDedicatedTestSplit": has_test_split,
-            }
-        row_end = db.get_task(task_id, user_id)
-        params_end: dict[str, Any] = {}
-        if row_end is not None and "task_params_json" in row_end.keys() and row_end["task_params_json"]:
-            try:
-                params_end = json.loads(row_end["task_params_json"])
-            except Exception:
-                params_end = {}
-        use_comp_class_final = bool(params_end.get("useCompetitionClassModel", use_competition_class_model))
-        use_comp_lite_final = bool(params_end.get("useCompetitionLiteModel", use_competition_lite_model))
-        if use_comp_class_final:
-            m = comp_class_metrics or {}
-            result["competitionClass"] = {
-                "finalTrainLoss": float(m.get("finalTrainLoss") or 0.0),
-                "finalValLoss": float(m.get("finalValLoss") or 0.0),
-                "steeringError": float(m.get("steeringError") or 0.0),
-                "valStressMAE": m.get("finalValStressAngleMAE"),
-                "finalTrainAcc": m.get("finalTrainAcc"),
-                "finalValAcc": m.get("finalValAcc"),
-                "requestedEpochs": m.get("requestedEpochs"),
-                "completedEpochs": m.get("completedEpochs"),
-                "bestEpoch": m.get("bestEpoch"),
-                "stoppedEpoch": m.get("stoppedEpoch"),
-                "earlyStopped": m.get("earlyStopped"),
-                "note": comp_class_note or ("鏈噰闆嗗埌璁粌鎸囨爣锛屽彲鑳借璺宠繃鎴栨棩蹇楁湭鍖归厤" if not comp_class_metrics else None),
-            }
-        if use_comp_lite_final:
-            m = comp_lite_metrics or {}
-            result["competitionLite"] = {
-                "finalTrainLoss": float(m.get("finalTrainLoss") or 0.0),
-                "finalValLoss": float(m.get("finalValLoss") or 0.0),
-                "steeringError": float(m.get("steeringError") or 0.0),
-                "valStressMAE": m.get("finalValStressAngleMAE"),
-                "finalTrainAcc": m.get("finalTrainAcc"),
-                "finalValAcc": m.get("finalValAcc"),
-                "requestedEpochs": m.get("requestedEpochs"),
-                "completedEpochs": m.get("completedEpochs"),
-                "bestEpoch": m.get("bestEpoch"),
-                "stoppedEpoch": m.get("stoppedEpoch"),
-                "earlyStopped": m.get("earlyStopped"),
-                "note": comp_lite_note or ("鏈噰闆嗗埌璁粌鎸囨爣锛屽彲鑳借璺宠繃鎴栨棩蹇楁湭鍖归厤" if not comp_lite_metrics else None),
+                "modelVariant": model_variant,
+                "numFrames": num_frames,
+                "frameStride": frame_stride,
             }
 
         db.update_task_checkpoints(
@@ -1171,6 +1176,20 @@ def training_worker(
             user_id,
             result_json=json.dumps(result, ensure_ascii=False),
             status="completed",
+        )
+        write_training_summary(
+            artifacts_dir,
+            {
+                "taskId": task_id,
+                "modelVariant": model_variant,
+                "numFrames": num_frames,
+                "frameStride": frame_stride,
+                "domainAugmentation": domain_augmentation,
+                "baselineCkpt": str(baseline_path),
+                "augmentedCkpt": (str(augmented_path) if domain_augmentation else None),
+                "result": result,
+                "params": task_params,
+            },
         )
         merge_progress(
             task_id,
@@ -1180,11 +1199,7 @@ def training_worker(
                 "baselineProgress": 100.0,
                 "domainAugmentationProgress": (100.0 if domain_augmentation else None),
                 "augmentedProgress": (100.0 if domain_augmentation else None),
-                "competitionClassProgress": (100.0 if use_competition_class_model else None),
-                "competitionClassText": ("已完成" if use_competition_class_model else None),
-                "competitionLiteProgress": (100.0 if use_competition_lite_model else None),
-                "competitionLiteText": ("已完成" if use_competition_lite_model else None),
-                "message": "璁粌瀹屾垚",
+                "message": "训练完成",
             },
         )
         _persist_progress_snapshot(task_id, artifacts_dir)
@@ -1192,26 +1207,18 @@ def training_worker(
         err = traceback.format_exc()
         db.update_task_status(task_id, user_id, "failed", err[:2000])
         merge_progress(task_id, {"status": "failed", "message": err[:500]})
+        failure_summary = read_training_summary(artifacts_dir) or {}
+        failure_summary.update(
+            {
+                "taskId": task_id,
+                "modelVariant": model_variant,
+                "numFrames": num_frames,
+                "frameStride": frame_stride,
+                "status": "failed",
+                "error": err[:4000],
+            }
+        )
+        write_training_summary(artifacts_dir, failure_summary)
         _persist_progress_snapshot(task_id, artifacts_dir)
     finally:
         release_controls(task_id)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

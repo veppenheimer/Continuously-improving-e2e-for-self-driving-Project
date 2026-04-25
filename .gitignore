@@ -1,0 +1,84 @@
+# Local environment and secrets
+.env
+.env.*
+*.local
+*.key
+*.pem
+
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+ENV/
+
+# Node / frontend
+node_modules/
+dist/
+build/
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDE / OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Datasets and generated local data
+/dataset/
+/data/
+/data_aug/
+/data1/
+/tmp*/
+
+# Training runs, checkpoints, and experiment artifacts
+/training_runs/
+**/runs/
+**/tb/
+**/checkpoints/task_*/
+**/events.out.tfevents*
+*.pth
+*.pt
+*.ckpt
+*.onnx
+*.engine
+*.log
+
+# Generated plots, reports, and scratch output
+/output/
+*.png
+*.jpg
+*.jpeg
+*.bmp
+*.gif
+
+# Archives and uploaded source packages
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# Web app local runtime state
+e2e_self-driving/Net_Web/data_storage/
+e2e_self-driving/web/vite-*.log
+
+# Keep the standalone temporal3 source project, but ignore its local data and run outputs.
+!/temporal3_project/
+/temporal3_project/dataset/*
+!/temporal3_project/dataset/README.md
+/temporal3_project/runs/*
+!/temporal3_project/runs/README.md
+/temporal3_project/output/*
+!/temporal3_project/output/README.md

@@ -1,10 +1,12 @@
-"""与前端约定的 Pydantic 模型（camelCase 序列化）。"""
+"""Pydantic schemas shared with the frontend."""
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
+
+ModelVariant = Literal["legacy", "mobilenet_v2", "temporal3"]
 
 
 class UserOut(BaseModel):
@@ -60,18 +62,13 @@ class TaskProgress(BaseModel):
     total_epochs: int = Field(serialization_alias="totalEpochs")
     baseline: LossSeriesBundle
     augmented: Optional[LossSeriesBundle] = None
-    competition_class: Optional[LossSeriesBundle] = Field(default=None, serialization_alias="competitionClass")
-    competition_lite: Optional[LossSeriesBundle] = Field(default=None, serialization_alias="competitionLite")
     baseline_progress: float = Field(default=0.0, serialization_alias="baselineProgress")
     domain_augmentation_progress: Optional[float] = Field(
-        default=None, serialization_alias="domainAugmentationProgress"
+        default=None,
+        serialization_alias="domainAugmentationProgress",
     )
     domain_augmentation_text: Optional[str] = Field(default=None, serialization_alias="domainAugmentationText")
     augmented_progress: Optional[float] = Field(default=None, serialization_alias="augmentedProgress")
-    competition_class_progress: Optional[float] = Field(default=None, serialization_alias="competitionClassProgress")
-    competition_class_text: Optional[str] = Field(default=None, serialization_alias="competitionClassText")
-    competition_lite_progress: Optional[float] = Field(default=None, serialization_alias="competitionLiteProgress")
-    competition_lite_text: Optional[str] = Field(default=None, serialization_alias="competitionLiteText")
     message: Optional[str] = None
 
 
@@ -89,8 +86,6 @@ class ModelMetrics(BaseModel):
     final_train_loss: float = Field(serialization_alias="finalTrainLoss")
     final_val_loss: float = Field(serialization_alias="finalValLoss")
     steering_error: float = Field(serialization_alias="steeringError")
-    final_train_acc: Optional[float] = Field(default=None, serialization_alias="finalTrainAcc")
-    final_val_acc: Optional[float] = Field(default=None, serialization_alias="finalValAcc")
     requested_epochs: Optional[int] = Field(default=None, serialization_alias="requestedEpochs")
     completed_epochs: Optional[int] = Field(default=None, serialization_alias="completedEpochs")
     best_epoch: Optional[int] = Field(default=None, serialization_alias="bestEpoch")
@@ -99,6 +94,10 @@ class ModelMetrics(BaseModel):
     best_val_loss: Optional[float] = Field(default=None, serialization_alias="bestValLoss")
     final_test_loss: Optional[float] = Field(default=None, serialization_alias="finalTestLoss")
     used_dedicated_test_split: Optional[bool] = Field(default=None, serialization_alias="usedDedicatedTestSplit")
+    val_stress_mae: Optional[float] = Field(default=None, serialization_alias="valStressMAE")
+    model_variant: Optional[ModelVariant] = Field(default=None, serialization_alias="modelVariant")
+    num_frames: Optional[int] = Field(default=None, serialization_alias="numFrames")
+    frame_stride: Optional[int] = Field(default=None, serialization_alias="frameStride")
     note: Optional[str] = None
 
 
@@ -107,8 +106,6 @@ class TaskResultSummary(BaseModel):
 
     baseline: ModelMetrics
     augmented: Optional[ModelMetrics] = None
-    competition_class: Optional[ModelMetrics] = Field(default=None, serialization_alias="competitionClass")
-    competition_lite: Optional[ModelMetrics] = Field(default=None, serialization_alias="competitionLite")
 
 
 class CreateTaskBody(BaseModel):
@@ -116,6 +113,7 @@ class CreateTaskBody(BaseModel):
 
     project_id: str = Field(alias="projectId")
     dataset_id: str = Field(alias="datasetId")
+    model_variant: ModelVariant = Field(alias="modelVariant")
     learning_rate: float = Field(alias="learningRate", gt=0)
     batch_size: int = Field(alias="batchSize", ge=1)
     epochs: int = Field(ge=1, le=5000)
@@ -129,9 +127,7 @@ class CreateTaskBody(BaseModel):
     cyclegan_load_size: int = Field(default=286, alias="cycleGanLoadSize", ge=64, le=2048)
     cyclegan_crop_size: int = Field(default=256, alias="cycleGanCropSize", ge=64, le=2048)
     cyclegan_lambda_identity: float = Field(default=0.5, alias="cycleGanLambdaIdentity", ge=0, le=10)
-    use_competition_class_model: bool = Field(default=False, alias="useCompetitionClassModel")
-    use_competition_lite_model: bool = Field(default=False, alias="useCompetitionLiteModel")
-    name: Optional[str] = Field(default=None, max_length=128, description="任务显示名称，可空则后端生成默认名")
+    name: Optional[str] = Field(default=None, max_length=128, description="任务展示名称，可为空")
 
 
 class DatasetItemOut(BaseModel):
@@ -182,5 +178,3 @@ class CompareInferOut(BaseModel):
 
     baseline_steering: float = Field(serialization_alias="baselineSteering")
     augmented_steering: Optional[float] = Field(default=None, serialization_alias="augmentedSteering")
-    competition_class_steering: Optional[float] = Field(default=None, serialization_alias="competitionClassSteering")
-    competition_lite_steering: Optional[float] = Field(default=None, serialization_alias="competitionLiteSteering")

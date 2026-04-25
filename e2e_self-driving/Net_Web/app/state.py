@@ -1,4 +1,4 @@
-"""内存中的训练进度与线程同步原语（进程重启后丢失）。"""
+"""In-memory training progress and task controls."""
 
 from __future__ import annotations
 
@@ -27,16 +27,10 @@ def register_task(task_id: str) -> TaskControls:
             "totalEpochs": 0,
             "baseline": {"trainLossSeries": [], "valLossSeries": []},
             "augmented": None,
-            "competitionClass": None,
-            "competitionLite": None,
             "baselineProgress": 0.0,
             "domainAugmentationProgress": None,
             "domainAugmentationText": None,
             "augmentedProgress": None,
-            "competitionClassProgress": None,
-            "competitionClassText": None,
-            "competitionLiteProgress": None,
-            "competitionLiteText": None,
             "message": None,
         }
         return ctrl
@@ -49,7 +43,6 @@ def unregister_task(task_id: str) -> None:
 
 
 def release_controls(task_id: str) -> None:
-    """训练线程结束时调用：移除 pause/stop 句柄，保留进度曲线供 GET /progress 读取。"""
     with _lock:
         _controls.pop(task_id, None)
 
@@ -62,16 +55,16 @@ def get_controls(task_id: str) -> Optional[TaskControls]:
 def merge_progress(task_id: str, patch: dict[str, Any]) -> None:
     with _lock:
         base = _progress.setdefault(task_id, {})
-        for k, v in patch.items():
-            if k == "baseline" or k == "augmented":
-                if v is None:
-                    base[k] = None
-                elif isinstance(v, dict) and isinstance(base.get(k), dict):
-                    base[k] = {**base[k], **v}
+        for key, value in patch.items():
+            if key in {"baseline", "augmented"}:
+                if value is None:
+                    base[key] = None
+                elif isinstance(value, dict) and isinstance(base.get(key), dict):
+                    base[key] = {**base[key], **value}
                 else:
-                    base[k] = v
+                    base[key] = value
             else:
-                base[k] = v
+                base[key] = value
 
 
 def get_progress(task_id: str) -> dict[str, Any]:
@@ -79,19 +72,13 @@ def get_progress(task_id: str) -> dict[str, Any]:
         return dict(_progress.get(task_id, {}))
 
 
-def append_loss_point(
-    task_id: str,
-    branch: str,
-    epoch: int,
-    train_loss: float,
-    val_loss: float,
-) -> None:
-    pt = {"epoch": epoch, "trainLoss": train_loss, "valLoss": val_loss}
+def append_loss_point(task_id: str, branch: str, epoch: int, train_loss: float, val_loss: float) -> None:
+    point = {"epoch": epoch, "trainLoss": train_loss, "valLoss": val_loss}
     with _lock:
-        p = _progress.setdefault(task_id, {})
-        cur = p.get(branch)
-        if not isinstance(cur, dict):
-            cur = {"trainLossSeries": [], "valLossSeries": []}
-            p[branch] = cur
-        cur["trainLossSeries"].append(pt)
-        cur["valLossSeries"].append(pt)
+        progress = _progress.setdefault(task_id, {})
+        current = progress.get(branch)
+        if not isinstance(current, dict):
+            current = {"trainLossSeries": [], "valLossSeries": []}
+            progress[branch] = current
+        current["trainLossSeries"].append(point)
+        current["valLossSeries"].append(point)

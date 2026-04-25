@@ -1,7 +1,4 @@
-﻿"""单张图像预处理 + 推理。
-
-默认兼容旧模型；若 checkpoint 内包含 `preprocess` 元数据，则按该配置进行推理。
-"""
+"""Single-image preprocessing and inference utilities."""
 
 from __future__ import annotations
 
@@ -19,7 +16,7 @@ for candidate in (NET_WEB_DIR, REPO_ROOT):
     if str(candidate) not in sys.path:
         sys.path.insert(0, str(candidate))
 
-from models import AutoDriveNet, build_model_for_checkpoint
+from models import build_model_for_checkpoint
 from steering_preprocess import (
     DEFAULT_PREPROCESS_CONFIG,
     PreprocessConfig,
@@ -52,10 +49,13 @@ def predict_image(model: torch.nn.Module, bgr: np.ndarray, device: torch.device)
     return float(y.cpu().numpy().reshape(-1)[0])
 
 
-def load_checkpoint_model(ckpt_path: Path, device: torch.device) -> AutoDriveNet:
+def load_checkpoint_model(ckpt_path: Path, device: torch.device) -> torch.nn.Module:
     ckpt = torch.load(str(ckpt_path), map_location=device)
     state = ckpt.get("model", ckpt)
-    model = build_model_for_checkpoint(state).to(device)
+    model_variant = None
+    if isinstance(ckpt, dict) and ckpt.get("modelVariant") is not None:
+        model_variant = str(ckpt["modelVariant"])
+    model = build_model_for_checkpoint(state, model_variant=model_variant).to(device)
     preprocess = DEFAULT_PREPROCESS_CONFIG
     if isinstance(ckpt, dict):
         preprocess = preprocess_config_from_dict(ckpt.get("preprocess"), fallback=DEFAULT_PREPROCESS_CONFIG)

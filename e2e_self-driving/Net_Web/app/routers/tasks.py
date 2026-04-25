@@ -1,4 +1,4 @@
-﻿"""Training task routes: create, inspect, progress, inference, download, and websocket updates."""
+"""Training task routes: create, inspect, progress, inference, download, and websocket updates."""
 
 from __future__ import annotations
 
@@ -6,8 +6,6 @@ import asyncio
 import json
 import shutil
 import threading
-import importlib.util
-import sys
 from pathlib import Path
 
 import torch
@@ -15,7 +13,7 @@ from fastapi import APIRouter, File, HTTPException, Query, UploadFile, WebSocket
 from fastapi.responses import FileResponse
 
 from app import database as db
-from app.config import settings
+from app import state
 from app.deps import CurrentUser
 from app.progress_view import build_task_progress
 from app.schemas import (
@@ -29,30 +27,16 @@ from app.schemas import (
 )
 from app.security import safe_decode
 from app.services import inference as infer_svc
-from app import state
-from app.training_artifacts import load_competition_artifact_snapshot, read_progress_snapshot
+from app.training_artifacts import read_progress_snapshot, read_training_summary
 from app.training_runner import training_worker
+from app.config import settings
 
 router = APIRouter(tags=["tasks"])
 
 
 def _fallback_from_row(row) -> dict:
     dom = bool(row["domain_augmentation"])
-    extra_class = False
-    extra_lite = False
-    try:
-        raw = row["task_params_json"]
-        if raw:
-            p = json.loads(raw)
-            extra_class = bool(p.get("useCompetitionClassModel"))
-            extra_lite = bool(p.get("useCompetitionLiteModel"))
-    except Exception:
-        pass
     total = int(row["epochs"]) * (2 if dom else 1)
-    if extra_class:
-        total += int(row["epochs"])
-    if extra_lite:
-        total += int(row["epochs"])
     return {
         "status": row["status"],
         "message": row["message"],
@@ -62,138 +46,75 @@ def _fallback_from_row(row) -> dict:
         "domainAugmentationProgress": (100.0 if row["status"] == "completed" and dom else (0.0 if dom else None)),
         "domainAugmentationText": ("已完成" if row["status"] == "completed" and dom else None),
         "augmentedProgress": (100.0 if row["status"] == "completed" and dom else (0.0 if dom else None)),
-        "competitionClassProgress": (100.0 if row["status"] == "completed" and extra_class else (0.0 if extra_class else None)),
-        "competitionClassText": ("已完成" if row["status"] == "completed" and extra_class else None),
-        "competitionLiteProgress": (100.0 if row["status"] == "completed" and extra_lite else (0.0 if extra_lite else None)),
-        "competitionLiteText": ("已完成" if row["status"] == "completed" and extra_lite else None),
     }
 
 
-def _fallback_progress_dict(fb: dict) -> dict:
-    dom = fb["domain_augmentation"]
-    total = fb["totalEpochs"]
+def _fallback_progress_dict(fallback: dict) -> dict:
+    dom = fallback["domain_augmentation"]
+    total = fallback["totalEpochs"]
     return {
-        "status": fb["status"],
-        "currentEpoch": total if fb["status"] == "completed" else 0,
+        "status": fallback["status"],
+        "currentEpoch": total if fallback["status"] == "completed" else 0,
         "totalEpochs": total,
         "baseline": {"trainLossSeries": [], "valLossSeries": []},
         "augmented": ({"trainLossSeries": [], "valLossSeries": []} if dom else None),
-        "competitionClass": (
-            {"trainLossSeries": [], "valLossSeries": []}
-            if fb.get("competitionClassProgress") is not None
-            else None
-        ),
-        "competitionLite": (
-            {"trainLossSeries": [], "valLossSeries": []}
-            if fb.get("competitionLiteProgress") is not None
-            else None
-        ),
-        "baselineProgress": fb.get("baselineProgress", 0.0),
-        "domainAugmentationProgress": fb.get("domainAugmentationProgress"),
-        "domainAugmentationText": fb.get("domainAugmentationText"),
-        "augmentedProgress": fb.get("augmentedProgress"),
-        "competitionClassProgress": fb.get("competitionClassProgress"),
-        "competitionClassText": fb.get("competitionClassText"),
-        "competitionLiteProgress": fb.get("competitionLiteProgress"),
-        "competitionLiteText": fb.get("competitionLiteText"),
-        "message": fb.get("message"),
+        "baselineProgress": fallback.get("baselineProgress", 0.0),
+        "domainAugmentationProgress": fallback.get("domainAugmentationProgress"),
+        "domainAugmentationText": fallback.get("domainAugmentationText"),
+        "augmentedProgress": fallback.get("augmentedProgress"),
+        "message": fallback.get("message"),
     }
 
 
-def _empty_loss_bundle(value) -> bool:
-    if not isinstance(value, dict):
-        return True
-    return not (value.get("trainLossSeries") or value.get("valLossSeries"))
-
-
-def _progress_for_task(task_id: str, fb: dict) -> dict:
+def _progress_for_task(task_id: str, fallback: dict) -> dict:
     task_dir = settings.data_dir / "tasks" / task_id
     raw = state.get_progress(task_id)
     if not raw:
         raw = read_progress_snapshot(task_dir) or {}
-    raw = dict(raw) if raw else _fallback_progress_dict(fb)
-
-    needs_class = fb.get("competitionClassProgress") is not None and _empty_loss_bundle(raw.get("competitionClass"))
-    needs_lite = fb.get("competitionLiteProgress") is not None and _empty_loss_bundle(raw.get("competitionLite"))
-    if needs_class or needs_lite:
-        artifact_progress = load_competition_artifact_snapshot(task_dir).get("progress", {})
-        if needs_class and artifact_progress.get("competitionClass"):
-            raw["competitionClass"] = artifact_progress["competitionClass"]
-        if needs_lite and artifact_progress.get("competitionLite"):
-            raw["competitionLite"] = artifact_progress["competitionLite"]
-    return raw
+    return dict(raw) if raw else _fallback_progress_dict(fallback)
 
 
-_STEERING_CLASSES = [1.72, 1.64, 1.5, 0.0, -1.5, -1.56, -1.58, -1.6, -1.62]
+def _load_result_payload(task_id: str, row) -> dict[str, object]:
+    if row["result_json"]:
+        try:
+            data = json.loads(row["result_json"])
+            if isinstance(data, dict):
+                return data
+        except json.JSONDecodeError:
+            pass
+    summary = read_training_summary(settings.data_dir / "tasks" / task_id)
+    if isinstance(summary, dict) and isinstance(summary.get("result"), dict):
+        return summary["result"]
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="没有结果数据")
 
 
-def _load_comp_module(module_path: Path, module_key: str):
-    spec = importlib.util.spec_from_file_location(module_key, str(module_path))
-    if spec is None or spec.loader is None:
-        raise RuntimeError(f"failed to load Python module: {module_path}")
-    mod = importlib.util.module_from_spec(spec)
-    module_dir = str(module_path.parent)
-    added = False
-    if module_dir not in sys.path:
-        sys.path.insert(0, module_dir)
-        added = True
-    try:
-        spec.loader.exec_module(mod)
-    finally:
-        if added:
-            try:
-                sys.path.remove(module_dir)
-            except ValueError:
-                pass
-    return mod
-
-
-def _load_comp_model(model_py: Path, class_name: str, ckpt: Path, device: torch.device):
-    mod = _load_comp_module(model_py, f"comp_{class_name}_{ckpt.stem}")
-    data = torch.load(str(ckpt), map_location=device)
-    state = data.get("model", data) if isinstance(data, dict) else data
-    builder = getattr(mod, "build_model_for_checkpoint", None)
-    if callable(builder):
-        model = builder(state).to(device)
-    else:
-        cls = getattr(mod, class_name)
-        model = cls().to(device)
-        model.load_state_dict(state)
-    model.eval()
-    return model
-
-
-def _load_comp_decode(module_dir: Path, ckpt: Path):
-    steering_mod = _load_comp_module(module_dir / "steering_config.py", f"comp_decode_{ckpt.stem}")
-    decode_output = getattr(steering_mod, "decode_output", None)
-    if decode_output is None:
-        raise RuntimeError(f"failed to load decode_output: {module_dir / 'steering_config.py'}")
-    return decode_output
-
-
-def _predict_comp_steering(model: torch.nn.Module, bgr, device: torch.device) -> float:
-    x = infer_svc._bgr_to_tensor(bgr).to(device)  # noqa: SLF001
-    with torch.no_grad():
-        logits = model(x)
-    cls = int(torch.argmax(logits, dim=1).item())
-    cls = max(0, min(cls, len(_STEERING_CLASSES) - 1))
-    return float(_STEERING_CLASSES[cls])
-
-
-def _predict_comp_class_steering(model: torch.nn.Module, decode_output, bgr, device: torch.device) -> float:
-    x = infer_svc._bgr_to_tensor(bgr).to(device)  # noqa: SLF001
-    with torch.no_grad():
-        output = model(x)
-        angle = decode_output(output)
-    if torch.is_tensor(angle):
-        return float(angle.reshape(-1)[0].item())
-    return float(angle)
+def _build_metrics(data: dict[str, object]) -> ModelMetrics:
+    return ModelMetrics(
+        final_train_loss=float(data.get("finalTrainLoss") or 0.0),
+        final_val_loss=float(data.get("finalValLoss") or 0.0),
+        steering_error=float(data.get("steeringError") or 0.0),
+        requested_epochs=(int(data["requestedEpochs"]) if data.get("requestedEpochs") is not None else None),
+        completed_epochs=(int(data["completedEpochs"]) if data.get("completedEpochs") is not None else None),
+        best_epoch=(int(data["bestEpoch"]) if data.get("bestEpoch") is not None else None),
+        stopped_epoch=(int(data["stoppedEpoch"]) if data.get("stoppedEpoch") is not None else None),
+        early_stopped=(bool(data["earlyStopped"]) if data.get("earlyStopped") is not None else None),
+        best_val_loss=(float(data["bestValLoss"]) if data.get("bestValLoss") is not None else None),
+        final_test_loss=(float(data["finalTestLoss"]) if data.get("finalTestLoss") is not None else None),
+        used_dedicated_test_split=(
+            bool(data["usedDedicatedTestSplit"]) if data.get("usedDedicatedTestSplit") is not None else None
+        ),
+        val_stress_mae=(float(data["valStressMAE"]) if data.get("valStressMAE") is not None else None),
+        model_variant=(str(data["modelVariant"]) if data.get("modelVariant") is not None else None),
+        num_frames=(int(data["numFrames"]) if data.get("numFrames") is not None else None),
+        frame_stride=(int(data["frameStride"]) if data.get("frameStride") is not None else None),
+        note=(str(data["note"]) if data.get("note") else None),
+    )
 
 
 @router.get("/tasks", response_model=list[TrainingTaskSummary])
 def list_tasks(user: CurrentUser, project_id: str | None = Query(default=None, alias="projectId")):
     rows = db.list_tasks_for_user(user["id"], project_id)
-    return [TrainingTaskSummary(**db.task_row_to_summary(r)) for r in rows]
+    return [TrainingTaskSummary(**db.task_row_to_summary(row)) for row in rows]
 
 
 @router.get("/tasks/{task_id}", response_model=TrainingTaskSummary)
@@ -210,20 +131,21 @@ def create_task(body: CreateTaskBody, user: CurrentUser):
     if project is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="项目不存在")
 
-    ds = db.get_dataset(body.dataset_id, user["id"], body.project_id)
-    if ds is None:
+    dataset = db.get_dataset(body.dataset_id, user["id"], body.project_id)
+    if dataset is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="数据集不存在或不属于该项目")
-    ds_b = None
+
+    dataset_b = None
     if body.domain_augmentation:
         if not body.domain_b_dataset_id:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="寮€鍚煙澧炲己鏃跺繀椤婚€夋嫨 B 鍩熸暟鎹泦")
-        ds_b = db.get_dataset(body.domain_b_dataset_id, user["id"], body.project_id)
-        if ds_b is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="B 鍩熸暟鎹泦涓嶅瓨鍦ㄦ垨涓嶅睘浜庤椤圭洰")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="开启域增强时必须选择 B 域数据集")
+        dataset_b = db.get_dataset(body.domain_b_dataset_id, user["id"], body.project_id)
+        if dataset_b is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="B 域数据集不存在或不属于该项目")
         if body.domain_b_dataset_id == body.dataset_id:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A 鍩熷拰 B 鍩熸暟鎹泦涓嶈兘鐩稿悓")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A 域和 B 域数据集不能相同")
 
-    tid = db.insert_task(
+    task_id = db.insert_task(
         user["id"],
         body.project_id,
         body.dataset_id,
@@ -237,12 +159,13 @@ def create_task(body: CreateTaskBody, user: CurrentUser):
             "batchSize": body.batch_size,
             "epochs": body.epochs,
             "datasetId": body.dataset_id,
-            "datasetName": ds["name"],
+            "datasetName": dataset["name"],
             "projectId": body.project_id,
             "projectName": project["name"],
+            "modelVariant": body.model_variant,
             "domainAugmentation": body.domain_augmentation,
             "domainBDatasetId": body.domain_b_dataset_id,
-            "domainBDatasetName": (ds_b["name"] if ds_b is not None else None),
+            "domainBDatasetName": (dataset_b["name"] if dataset_b is not None else None),
             "cycleGanEpochs": body.cyclegan_epochs,
             "cycleGanDecayEpochs": body.cyclegan_decay_epochs,
             "cycleGanBatchSize": body.cyclegan_batch_size,
@@ -251,25 +174,23 @@ def create_task(body: CreateTaskBody, user: CurrentUser):
             "cycleGanLoadSize": body.cyclegan_load_size,
             "cycleGanCropSize": body.cyclegan_crop_size,
             "cycleGanLambdaIdentity": body.cyclegan_lambda_identity,
-            "useCompetitionClassModel": body.use_competition_class_model,
-            "useCompetitionLiteModel": body.use_competition_lite_model,
         },
     )
-    artifacts = settings.data_dir / "tasks" / tid
+    artifacts = settings.data_dir / "tasks" / task_id
     artifacts.mkdir(parents=True, exist_ok=True)
 
-    state.register_task(tid)
+    state.register_task(task_id)
     thread = threading.Thread(
         target=training_worker,
         kwargs={
-            "task_id": tid,
+            "task_id": task_id,
             "user_id": user["id"],
-            "dataset_root": ds["root_dir"],
+            "dataset_root": dataset["root_dir"],
             "learning_rate": body.learning_rate,
             "batch_size": body.batch_size,
             "epochs": body.epochs,
             "domain_augmentation": body.domain_augmentation,
-            "dataset_b_root": (ds_b["root_dir"] if ds_b is not None else None),
+            "dataset_b_root": (dataset_b["root_dir"] if dataset_b is not None else None),
             "cyclegan_epochs": body.cyclegan_epochs,
             "cyclegan_decay_epochs": body.cyclegan_decay_epochs,
             "cyclegan_batch_size": body.cyclegan_batch_size,
@@ -278,15 +199,14 @@ def create_task(body: CreateTaskBody, user: CurrentUser):
             "cyclegan_load_size": body.cyclegan_load_size,
             "cyclegan_crop_size": body.cyclegan_crop_size,
             "cyclegan_lambda_identity": body.cyclegan_lambda_identity,
-            "use_competition_class_model": body.use_competition_class_model,
-            "use_competition_lite_model": body.use_competition_lite_model,
+            "model_variant": body.model_variant,
             "artifacts_dir": artifacts,
         },
         daemon=True,
     )
     thread.start()
 
-    row = db.get_task(tid, user["id"])
+    row = db.get_task(task_id, user["id"])
     assert row is not None
     return TrainingTaskSummary(**db.task_row_to_summary(row))
 
@@ -301,9 +221,9 @@ def delete_task(task_id: str, user: CurrentUser):
         ctrl.stop.set()
     state.unregister_task(task_id)
     db.delete_task(task_id, user["id"])
-    art = settings.data_dir / "tasks" / task_id
-    if art.is_dir():
-        shutil.rmtree(art, ignore_errors=True)
+    artifacts = settings.data_dir / "tasks" / task_id
+    if artifacts.is_dir():
+        shutil.rmtree(artifacts, ignore_errors=True)
     return None
 
 
@@ -312,9 +232,9 @@ def get_task_progress(task_id: str, user: CurrentUser):
     row = db.get_task(task_id, user["id"])
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="任务不存在")
-    fb = _fallback_from_row(row)
-    raw = _progress_for_task(task_id, fb)
-    return build_task_progress(raw, fb)
+    fallback = _fallback_from_row(row)
+    raw = _progress_for_task(task_id, fallback)
+    return build_task_progress(raw, fallback)
 
 
 @router.post("/tasks/{task_id}/pause", status_code=status.HTTP_204_NO_CONTENT)
@@ -324,17 +244,16 @@ def pause_or_resume(task_id: str, user: CurrentUser):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="任务不存在")
     ctrl = state.get_controls(task_id)
     if ctrl is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="浠诲姟褰撳墠涓嶅彲鏆傚仠锛堟湭鍦ㄨ繍琛屾垨宸茬粨鏉燂級")
-    st = row["status"]
-    if st == "running":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="任务当前不可暂停")
+    if row["status"] == "running":
         ctrl.pause.set()
         db.update_task_status(task_id, user["id"], "paused", None)
-    elif st == "paused":
+        return None
+    if row["status"] == "paused":
         ctrl.pause.clear()
         db.update_task_status(task_id, user["id"], "running", None)
-    else:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="褰撳墠鐘舵€佷笉鏀寔鏆傚仠/缁х画")
-    return None
+        return None
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="当前状态不支持暂停/继续")
 
 
 @router.post("/tasks/{task_id}/stop", status_code=status.HTTP_204_NO_CONTENT)
@@ -344,7 +263,7 @@ def stop_task(task_id: str, user: CurrentUser):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="任务不存在")
     ctrl = state.get_controls(task_id)
     if ctrl is None:
-        db.update_task_status(task_id, user["id"], "stopped", "鐢ㄦ埛缁堟")
+        db.update_task_status(task_id, user["id"], "stopped", "用户终止")
         return None
     if row["status"] in ("completed", "failed", "stopped"):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="任务已结束")
@@ -358,98 +277,17 @@ def get_results(task_id: str, user: CurrentUser):
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="任务不存在")
     if row["status"] != "completed":
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="浠诲姟灏氭湭瀹屾垚")
-    if not row["result_json"]:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="没有结果数据")
-    data = json.loads(row["result_json"])
-    params = {}
-    try:
-        if row["task_params_json"]:
-            params = json.loads(row["task_params_json"])
-    except Exception:
-        params = {}
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="任务尚未完成")
+    data = _load_result_payload(task_id, row)
 
-    artifact_metrics = load_competition_artifact_snapshot(settings.data_dir / "tasks" / task_id).get("metrics", {})
+    baseline = data.get("baseline")
+    if not isinstance(baseline, dict):
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="结果数据缺少 baseline")
+    augmented = data.get("augmented")
 
-    def _has_metric_values(value) -> bool:
-        if not isinstance(value, dict):
-            return False
-        return any(
-            value.get(k) not in (None, 0, 0.0)
-            for k in ("finalTrainLoss", "finalValLoss", "finalTrainAcc", "finalValAcc")
-        )
-
-    def _hydrate_metric(key: str) -> None:
-        artifact_value = artifact_metrics.get(key)
-        if artifact_value and not _has_metric_values(data.get(key)):
-            data[key] = artifact_value
-
-    if params.get("useCompetitionClassModel"):
-        _hydrate_metric("competitionClass")
-    if params.get("useCompetitionLiteModel"):
-        _hydrate_metric("competitionLite")
-
-    if params.get("useCompetitionClassModel") and "competitionClass" not in data:
-        data["competitionClass"] = {
-            "finalTrainLoss": 0.0,
-            "finalValLoss": 0.0,
-            "steeringError": 0.0,
-            "finalTrainAcc": None,
-            "finalValAcc": None,
-            "note": "该任务创建时尚未记录该模型指标，请重新训练以获取完整统计。",
-        }
-    if params.get("useCompetitionLiteModel") and "competitionLite" not in data:
-        data["competitionLite"] = {
-            "finalTrainLoss": 0.0,
-            "finalValLoss": 0.0,
-            "steeringError": 0.0,
-            "finalTrainAcc": None,
-            "finalValAcc": None,
-            "note": "该任务创建时尚未记录该模型指标，请重新训练以获取完整统计。",
-        }
-    base = data["baseline"]
-    aug = data.get("augmented")
-    comp_class = data.get("competitionClass")
-    comp_lite = data.get("competitionLite")
     return TaskResultSummary(
-        baseline=ModelMetrics(
-            final_train_loss=float(base["finalTrainLoss"]),
-            final_val_loss=float(base["finalValLoss"]),
-            steering_error=float(base["steeringError"]),
-        ),
-        augmented=(
-            ModelMetrics(
-                final_train_loss=float(aug["finalTrainLoss"]),
-                final_val_loss=float(aug["finalValLoss"]),
-                steering_error=float(aug["steeringError"]),
-            )
-            if aug
-            else None
-        ),
-        competition_class=(
-            ModelMetrics(
-                final_train_loss=float(comp_class.get("finalTrainLoss", 0.0)),
-                final_val_loss=float(comp_class.get("finalValLoss", 0.0)),
-                steering_error=float(comp_class.get("steeringError", 0.0)),
-                final_train_acc=float(comp_class["finalTrainAcc"]) if comp_class.get("finalTrainAcc") is not None else None,
-                final_val_acc=float(comp_class["finalValAcc"]) if comp_class.get("finalValAcc") is not None else None,
-                note=(str(comp_class["note"]) if comp_class.get("note") else None),
-            )
-            if comp_class
-            else None
-        ),
-        competition_lite=(
-            ModelMetrics(
-                final_train_loss=float(comp_lite.get("finalTrainLoss", 0.0)),
-                final_val_loss=float(comp_lite.get("finalValLoss", 0.0)),
-                steering_error=float(comp_lite.get("steeringError", 0.0)),
-                final_train_acc=float(comp_lite["finalTrainAcc"]) if comp_lite.get("finalTrainAcc") is not None else None,
-                final_val_acc=float(comp_lite["finalValAcc"]) if comp_lite.get("finalValAcc") is not None else None,
-                note=(str(comp_lite["note"]) if comp_lite.get("note") else None),
-            )
-            if comp_lite
-            else None
-        ),
+        baseline=_build_metrics(baseline),
+        augmented=(_build_metrics(augmented) if isinstance(augmented, dict) else None),
     )
 
 
@@ -459,53 +297,30 @@ async def infer_compare(task_id: str, user: CurrentUser, file: UploadFile = File
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="任务不存在")
     if row["status"] != "completed":
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="璇峰厛瀹屾垚璁粌")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="请先完成训练")
     if not row["baseline_ckpt"]:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="未找到基准模型")
+
     data = await file.read()
     try:
         bgr = infer_svc.load_image_bytes(data)
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    base_path = Path(row["baseline_ckpt"])
-    model_b = infer_svc.load_checkpoint_model(base_path, device)
-    b_angle = infer_svc.predict_image(model_b, bgr, device)
+    baseline_model = infer_svc.load_checkpoint_model(Path(row["baseline_ckpt"]), device)
+    baseline_angle = infer_svc.predict_image(baseline_model, bgr, device)
 
-    aug_angle: float | None = None
+    augmented_angle: float | None = None
     if row["augmented_ckpt"]:
-        aug_path = Path(row["augmented_ckpt"])
-        if aug_path.is_file():
-            model_a = infer_svc.load_checkpoint_model(aug_path, device)
-            aug_angle = infer_svc.predict_image(model_a, bgr, device)
-
-    comp_class_angle: float | None = None
-    comp_lite_angle: float | None = None
-    task_art = settings.data_dir / "tasks" / task_id
-    comp_root = settings.competition_project_root
-    class_ckpt = task_art / "competition_class" / "ve2_competition_class.pth"
-    lite_ckpt = task_art / "competition_lite" / "ve2_competition_lite.pth"
-    try:
-        if class_ckpt.is_file():
-            class_dir = comp_root / "Net_class"
-            m = _load_comp_model(class_dir / "models.py", "AutoDriveNet", class_ckpt, device)
-            decode_output = _load_comp_decode(class_dir, class_ckpt)
-            comp_class_angle = _predict_comp_class_steering(m, decode_output, bgr, device)
-    except Exception:
-        comp_class_angle = None
-    try:
-        if lite_ckpt.is_file():
-            m = _load_comp_model(comp_root / "Net_improve" / "models.py", "AutoDriveNetImprove", lite_ckpt, device)
-            comp_lite_angle = _predict_comp_steering(m, bgr, device)
-    except Exception:
-        comp_lite_angle = None
+        augmented_path = Path(row["augmented_ckpt"])
+        if augmented_path.is_file():
+            augmented_model = infer_svc.load_checkpoint_model(augmented_path, device)
+            augmented_angle = infer_svc.predict_image(augmented_model, bgr, device)
 
     return CompareInferOut(
-        baseline_steering=b_angle,
-        augmented_steering=aug_angle,
-        competition_class_steering=comp_class_angle,
-        competition_lite_steering=comp_lite_angle,
+        baseline_steering=baseline_angle,
+        augmented_steering=augmented_angle,
     )
 
 
@@ -513,23 +328,22 @@ async def infer_compare(task_id: str, user: CurrentUser, file: UploadFile = File
 def download_model(
     task_id: str,
     user: CurrentUser,
-    model: str = Query(..., description="baseline 鎴?augmented"),
+    stage: str = Query(..., description="baseline or augmented"),
 ):
     row = db.get_task(task_id, user["id"])
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="任务不存在")
     if row["status"] != "completed":
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="任务未完成")
-    if model not in ("baseline", "augmented"):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="model 椤讳负 baseline 鎴?augmented")
-    path_str = row["baseline_ckpt"] if model == "baseline" else row["augmented_ckpt"]
+    if stage not in ("baseline", "augmented"):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="stage 必须为 baseline 或 augmented")
+    path_str = row["baseline_ckpt"] if stage == "baseline" else row["augmented_ckpt"]
     if not path_str:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="璇ユā鍨嬩笉瀛樺湪")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="该阶段模型不存在")
     path = Path(path_str)
     if not path.is_file():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="文件已丢失")
-    name = f"{model}_model.pth"
-    return FileResponse(path, filename=name, media_type="application/octet-stream")
+    return FileResponse(path, filename=f"{stage}_checkpoint.pth", media_type="application/octet-stream")
 
 
 @router.websocket("/tasks/{task_id}/stream")
@@ -550,10 +364,10 @@ async def task_progress_ws(websocket: WebSocket, task_id: str, token: str | None
             row = db.get_task(task_id, user_id)
             if row is None:
                 break
-            fb = _fallback_from_row(row)
-            raw = _progress_for_task(task_id, fb)
-            prog = build_task_progress(raw, fb)
-            await websocket.send_text(prog.model_dump_json(by_alias=True))
+            fallback = _fallback_from_row(row)
+            raw = _progress_for_task(task_id, fallback)
+            progress = build_task_progress(raw, fallback)
+            await websocket.send_text(progress.model_dump_json(by_alias=True))
             if row["status"] in ("completed", "failed", "stopped"):
                 await asyncio.sleep(1.0)
                 break
@@ -568,18 +382,18 @@ def list_domain_aug_pairs(task_id: str, user: CurrentUser):
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="任务不存在")
     if not bool(row["domain_augmentation"]):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="璇ヤ换鍔℃湭寮€鍚煙澧炲己")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="该任务未开启域增强")
     pairs_path = settings.data_dir / "tasks" / task_id / "domain_aug_pairs.json"
     if not pairs_path.is_file():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="暂无域增强对比数据")
     try:
         data = json.loads(pairs_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="域增强对比数据损坏") from e
-    out: list[DomainAugPairOut] = []
-    for x in data:
-        out.append(DomainAugPairOut(index=int(x["index"]), a_name=str(x["aName"]), c_name=str(x["cName"])))
-    return out
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="域增强对比数据损坏") from exc
+    return [
+        DomainAugPairOut(index=int(item["index"]), a_name=str(item["aName"]), c_name=str(item["cName"]))
+        for item in data
+    ]
 
 
 @router.get("/tasks/{task_id}/domain-aug/image")
@@ -587,7 +401,7 @@ def get_domain_aug_image(
     task_id: str,
     user: CurrentUser,
     index: int = Query(..., ge=0),
-    kind: str = Query(..., description="a 鎴?c"),
+    kind: str = Query(..., description="a or c"),
 ):
     row = db.get_task(task_id, user["id"])
     if row is None:
@@ -596,17 +410,15 @@ def get_domain_aug_image(
     if not pairs_path.is_file():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="暂无域增强对比数据")
     data = json.loads(pairs_path.read_text(encoding="utf-8"))
-    target = next((x for x in data if int(x.get("index", -1)) == index), None)
+    target = next((item for item in data if int(item.get("index", -1)) == index), None)
     if target is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="对比索引不存在")
     if kind not in ("a", "c"):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="kind 蹇呴』涓?a 鎴?c")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="kind 必须为 a 或 c")
     path_key = "aPath" if kind == "a" else "cPath"
     name_key = "aName" if kind == "a" else "cName"
-    p = Path(str(target[path_key]))
-    if not p.is_file():
+    path = Path(str(target[path_key]))
+    if not path.is_file():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="图像文件不存在")
-    media = "image/png" if p.suffix.lower() == ".png" else "image/jpeg"
-    return FileResponse(p, media_type=media, filename=str(target[name_key]))
-
-
+    media = "image/png" if path.suffix.lower() == ".png" else "image/jpeg"
+    return FileResponse(path, media_type=media, filename=str(target[name_key]))

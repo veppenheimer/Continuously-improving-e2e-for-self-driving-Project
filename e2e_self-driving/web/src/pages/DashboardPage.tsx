@@ -4,12 +4,13 @@ import { showApiError } from "@/api/client";
 import { createProject, deleteProject, listProjects, renameProject } from "@/api/services/projects";
 import { deleteDataset, listDatasets, uploadDatasetZip } from "@/api/services/datasets";
 import { createTask, deleteTask, listTasks } from "@/api/services/tasks";
-import type { DatasetItem, ProjectItem, TrainingTaskSummary } from "@/api/types";
+import type { DatasetItem, ProjectItem, TrainingTaskSummary, TrainModelVariant } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MODEL_VARIANT_OPTIONS, modelVariantLabel } from "@/lib/modelVariant";
 import { taskStatusLabel, taskStatusVariant } from "@/lib/taskStatus";
 import { ChevronRight, FolderTree, Loader2, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -45,8 +46,7 @@ export function DashboardPage() {
   const [cycleGanLoadSize, setCycleGanLoadSize] = useState("286");
   const [cycleGanCropSize, setCycleGanCropSize] = useState("256");
   const [cycleGanLambdaIdentity, setCycleGanLambdaIdentity] = useState("0.5");
-  const [useCompetitionClassModel, setUseCompetitionClassModel] = useState(false);
-  const [useCompetitionLiteModel, setUseCompetitionLiteModel] = useState(false);
+  const [modelVariant, setModelVariant] = useState<TrainModelVariant>("mobilenet_v2");
 
   const selectedProject = useMemo(
     () => projects.find((x) => x.id === selectedProjectId) ?? null,
@@ -263,12 +263,11 @@ export function DashboardPage() {
       const task = await createTask({
         projectId: selectedProjectId,
         datasetId,
+        modelVariant,
         learningRate,
         batchSize,
         epochs: epochsN,
         domainAugmentation: domainAug,
-        useCompetitionClassModel,
-        useCompetitionLiteModel,
         ...(domainAug
           ? {
               domainBDatasetId,
@@ -483,7 +482,22 @@ export function DashboardPage() {
                       </select>
                     </div>
                   </div>
-                  <div className="grid gap-4 md:grid-cols-3">
+                  <div className="grid gap-4 md:grid-cols-4">
+                    <div className="space-y-2">
+                      <Label>模型架构</Label>
+                      <select
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        value={modelVariant}
+                        onChange={(e) => setModelVariant(e.target.value as TrainModelVariant)}
+                      >
+                        {MODEL_VARIANT_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-muted-foreground">
+                        {MODEL_VARIANT_OPTIONS.find((option) => option.value === modelVariant)?.description}
+                      </p>
+                    </div>
                     <div className="space-y-2">
                       <Label>学习率</Label>
                       <Input value={lr} onChange={(e) => setLr(e.target.value)} />
@@ -506,27 +520,6 @@ export function DashboardPage() {
                     />
                     开启域增强
                   </label>
-                  <div className="space-y-2 rounded-lg border p-4">
-                    <p className="text-sm font-medium">附加模型（e2e_competition）</p>
-                    <label className="flex cursor-pointer items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={useCompetitionClassModel}
-                        onChange={(e) => setUseCompetitionClassModel(e.target.checked)}
-                        className="h-4 w-4 rounded border-input"
-                      />
-                      训练分类模型（Net_class）
-                    </label>
-                    <label className="flex cursor-pointer items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={useCompetitionLiteModel}
-                        onChange={(e) => setUseCompetitionLiteModel(e.target.checked)}
-                        className="h-4 w-4 rounded border-input"
-                      />
-                      训练轻量模型（Net_improve）
-                    </label>
-                  </div>
                   {domainAug ? (
                     <div className="space-y-4 rounded-lg border p-4">
                       <div className="space-y-2">
@@ -610,8 +603,8 @@ export function DashboardPage() {
                               <span className="truncate">{t.name}</span>
                             </CardTitle>
                             <CardDescription className="mt-2">
-                              数据集 {t.params.datasetName || t.params.datasetId} · LR {t.params.learningRate} · batch {" "}
-                              {t.params.batchSize} · {t.params.epochs} epochs
+                              {modelVariantLabel(t.params.modelVariant)} · 数据集 {t.params.datasetName || t.params.datasetId}
+                              {" · "}LR {t.params.learningRate} · batch {t.params.batchSize} · {t.params.epochs} epochs
                               {t.domainAugmentation ? " · 域增强" : ""}
                             </CardDescription>
                           </div>

@@ -8,9 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTaskLiveProgress } from "@/hooks/useTaskLiveProgress";
+import { modelVariantLabel } from "@/lib/modelVariant";
 import { taskStatusLabel, taskStatusVariant } from "@/lib/taskStatus";
-import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export function TaskMonitorPage() {
   const { taskId } = useParams<{ taskId: string }>();
@@ -22,8 +23,8 @@ export function TaskMonitorPage() {
     let cancelled = false;
     (async () => {
       try {
-        const s = await getTask(taskId);
-        if (!cancelled) setSummary(s);
+        const task = await getTask(taskId);
+        if (!cancelled) setSummary(task);
       } catch {
         if (!cancelled) setSummary(null);
       }
@@ -35,49 +36,33 @@ export function TaskMonitorPage() {
 
   const series = useMemo(() => {
     if (!progress) return [];
-    const base = [
+    const items = [
       {
-        name: "基准模型",
+        name: "基准阶段",
         train: progress.baseline.trainLossSeries,
         val: progress.baseline.valLossSeries,
         color: "#38bdf8",
       },
     ];
     if (progress.augmented) {
-      base.push({
-        name: "域增强模型",
+      items.push({
+        name: "增强阶段",
         train: progress.augmented.trainLossSeries,
         val: progress.augmented.valLossSeries,
         color: "#a78bfa",
       });
     }
-    if (progress.competitionClass) {
-      base.push({
-        name: "竞赛分类模型",
-        train: progress.competitionClass.trainLossSeries,
-        val: progress.competitionClass.valLossSeries,
-        color: "#10b981",
-      });
-    }
-    if (progress.competitionLite) {
-      base.push({
-        name: "竞赛轻量模型",
-        train: progress.competitionLite.trainLossSeries,
-        val: progress.competitionLite.valLossSeries,
-        color: "#22c55e",
-      });
-    }
-    return base;
+    return items;
   }, [progress]);
 
   async function onPause() {
     if (!taskId) return;
     try {
       await pauseTask(taskId);
-      toast.success("已请求暂停");
+      toast.success("已请求暂停/继续");
       await refetch();
-    } catch (e) {
-      showApiError(e);
+    } catch (error) {
+      showApiError(error);
     }
   }
 
@@ -87,8 +72,8 @@ export function TaskMonitorPage() {
       await stopTask(taskId);
       toast.success("已请求终止");
       await refetch();
-    } catch (e) {
-      showApiError(e);
+    } catch (error) {
+      showApiError(error);
     }
   }
 
@@ -104,6 +89,8 @@ export function TaskMonitorPage() {
               <>
                 <span className="font-medium text-foreground">{summary.name}</span>
                 {" · "}
+                {modelVariantLabel(summary.params.modelVariant)}
+                {" · "}
               </>
             ) : null}
             ID <code className="text-primary">{taskId}</code>
@@ -111,30 +98,33 @@ export function TaskMonitorPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {progress && (
-            <Badge variant={taskStatusVariant(progress.status)}>{taskStatusLabel(progress.status)}</Badge>
-          )}
+          {progress ? <Badge variant={taskStatusVariant(progress.status)}>{taskStatusLabel(progress.status)}</Badge> : null}
           <Button variant="outline" size="sm" onClick={() => void refetch()}>
             刷新
           </Button>
           <Button variant="secondary" size="sm" onClick={() => void onPause()} disabled={progress?.status !== "running"}>
             暂停
           </Button>
-          <Button variant="destructive" size="sm" onClick={() => void onStop()} disabled={!progress || progress.status === "completed" || progress.status === "stopped" || progress.status === "failed"}>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => void onStop()}
+            disabled={!progress || progress.status === "completed" || progress.status === "stopped" || progress.status === "failed"}
+          >
             终止
           </Button>
-          {progress?.status === "completed" && (
+          {progress?.status === "completed" ? (
             <>
               <Button size="sm" asChild>
                 <Link to={`/tasks/${taskId}/results`}>查看结果</Link>
               </Button>
               {summary?.domainAugmentation ? (
                 <Button size="sm" variant="secondary" asChild>
-                  <Link to={`/tasks/${taskId}/domain-compare`}>查看A/C图像对比</Link>
+                  <Link to={`/tasks/${taskId}/domain-compare`}>查看 A/C 图像对比</Link>
                 </Button>
               ) : null}
             </>
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -158,7 +148,9 @@ export function TaskMonitorPage() {
               <div>
                 <div className="mb-1 flex items-center justify-between text-sm">
                   <span>整体进度</span>
-                  <span>{progress.totalEpochs ? ((progress.currentEpoch / progress.totalEpochs) * 100).toFixed(1) : "0.0"}%</span>
+                  <span>
+                    {progress.totalEpochs ? ((progress.currentEpoch / progress.totalEpochs) * 100).toFixed(1) : "0.0"}%
+                  </span>
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                   <div
@@ -169,9 +161,10 @@ export function TaskMonitorPage() {
                   />
                 </div>
               </div>
+
               <div>
                 <div className="mb-1 flex items-center justify-between text-sm">
-                  <span>模型1（仅A）</span>
+                  <span>基准阶段（仅 A）</span>
                   <span>{progress.baselineProgress.toFixed(1)}%</span>
                 </div>
                 <div
@@ -179,11 +172,12 @@ export function TaskMonitorPage() {
                   style={{ width: `${Math.max(0, Math.min(100, progress.baselineProgress))}%` }}
                 />
               </div>
+
               {summary?.domainAugmentation ? (
                 <>
                   <div>
                     <div className="mb-1 flex items-center justify-between text-sm">
-                      <span>域增强（CycleGAN生成C）</span>
+                      <span>域增强（CycleGAN 生成 C）</span>
                       <span>{(progress.domainAugmentationProgress ?? 0).toFixed(1)}%</span>
                     </div>
                     <div
@@ -196,7 +190,7 @@ export function TaskMonitorPage() {
                   </div>
                   <div>
                     <div className="mb-1 flex items-center justify-between text-sm">
-                      <span>模型2（A + C）</span>
+                      <span>增强阶段（A + C）</span>
                       <span>{(progress.augmentedProgress ?? 0).toFixed(1)}%</span>
                     </div>
                     <div
@@ -205,36 +199,6 @@ export function TaskMonitorPage() {
                     />
                   </div>
                 </>
-              ) : null}
-              {summary?.params.useCompetitionClassModel ? (
-                <div>
-                  <div className="mb-1 flex items-center justify-between text-sm">
-                    <span>竞赛分类模型（Net_class）</span>
-                    <span>{(progress.competitionClassProgress ?? 0).toFixed(1)}%</span>
-                  </div>
-                  <div
-                    className="h-2 rounded-full bg-emerald-500 transition-all"
-                    style={{ width: `${Math.max(0, Math.min(100, progress.competitionClassProgress ?? 0))}%` }}
-                  />
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {progress.competitionClassText ?? "等待执行分类模型训练"}
-                  </p>
-                </div>
-              ) : null}
-              {summary?.params.useCompetitionLiteModel ? (
-                <div>
-                  <div className="mb-1 flex items-center justify-between text-sm">
-                    <span>竞赛轻量模型（Net_improve）</span>
-                    <span>{(progress.competitionLiteProgress ?? 0).toFixed(1)}%</span>
-                  </div>
-                  <div
-                    className="h-2 rounded-full bg-green-600 transition-all"
-                    style={{ width: `${Math.max(0, Math.min(100, progress.competitionLiteProgress ?? 0))}%` }}
-                  />
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {progress.competitionLiteText ?? "等待执行轻量模型训练"}
-                  </p>
-                </div>
               ) : null}
             </CardContent>
           </Card>
@@ -245,7 +209,7 @@ export function TaskMonitorPage() {
               <CardDescription>实线为训练 Loss，虚线为验证 Loss</CardDescription>
             </CardHeader>
             <CardContent>
-              {series.length > 0 && series.some((s) => s.train.length || s.val.length) ? (
+              {series.length > 0 && series.some((item) => item.train.length || item.val.length) ? (
                 <LossChart series={series} />
               ) : (
                 <p className="py-12 text-center text-sm text-muted-foreground">等待后端写入曲线数据…</p>

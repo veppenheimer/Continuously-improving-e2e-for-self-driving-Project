@@ -5,12 +5,14 @@ import type {
   DomainAugPair,
   TaskProgress,
   TaskResultSummary,
+  TrainModelVariant,
   TrainingTaskSummary,
 } from "@/api/types";
 
 export interface CreateTaskPayload {
   projectId: string;
   datasetId: string;
+  modelVariant: TrainModelVariant;
   learningRate: number;
   batchSize: number;
   epochs: number;
@@ -24,9 +26,6 @@ export interface CreateTaskPayload {
   cycleGanLoadSize?: number;
   cycleGanCropSize?: number;
   cycleGanLambdaIdentity?: number;
-  useCompetitionClassModel?: boolean;
-  useCompetitionLiteModel?: boolean;
-  /** 可选；留空时后端生成「训练 xxxxxxxx」 */
   name?: string;
 }
 
@@ -85,11 +84,7 @@ export async function listDomainAugPairs(id: string): Promise<DomainAugPair[]> {
   return data;
 }
 
-export async function fetchDomainAugImageBlob(
-  id: string,
-  index: number,
-  kind: "a" | "c",
-): Promise<Blob> {
+export async function fetchDomainAugImageBlob(id: string, index: number, kind: "a" | "c"): Promise<Blob> {
   const { data } = await getApiClient().get(paths.taskDomainAugImage(id), {
     params: { index, kind },
     responseType: "blob",
@@ -97,16 +92,11 @@ export async function fetchDomainAugImageBlob(
   return data as Blob;
 }
 
-export type ModelVariant = "baseline" | "augmented";
+export type CheckpointStage = "baseline" | "augmented";
 
-/** 带 Authorization 下载，避免 <a href> 无法带头的问题 */
-export async function downloadModelFile(
-  taskId: string,
-  model: ModelVariant,
-  filename: string,
-): Promise<void> {
+export async function downloadModelFile(taskId: string, stage: CheckpointStage, filename: string): Promise<void> {
   const res = await getApiClient().get(paths.taskDownload(taskId), {
-    params: { model },
+    params: { stage },
     responseType: "blob",
   });
   const url = URL.createObjectURL(res.data);
