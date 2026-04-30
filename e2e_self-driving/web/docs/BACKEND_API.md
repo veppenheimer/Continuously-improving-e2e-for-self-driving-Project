@@ -36,7 +36,7 @@
 | POST | `/tasks/{id}/stop` | 终止 |
 | GET | `/tasks/{id}/results` | 完成后指标 |
 | POST | `/tasks/{id}/infer/compare` | `multipart`：`file`（图像）→ 对比推理结果 |
-| GET | `/tasks/{id}/download` | query: `model=baseline\|augmented`，返回模型文件流 |
+| GET | `/tasks/{id}/download` | query: `stage=baseline\|augmented`，返回模型文件流 |
 
 ### POST `/tasks` body
 

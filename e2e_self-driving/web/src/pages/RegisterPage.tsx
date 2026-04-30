@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthStore } from "@/store/authStore";
-import { Loader2, Sparkles } from "lucide-react";
+import { ArrowRight, Database, Loader2, Mail, ShieldCheck, Sparkles, UserPlus } from "lucide-react";
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -38,23 +38,19 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-5 p-4">
-      <div className="text-center">
-        <p className="text-balance bg-gradient-to-r from-sky-400 via-blue-500 to-violet-400 bg-clip-text text-4xl font-semibold tracking-[0.18em] text-transparent md:text-5xl">
-          构建你个人的端到端自动驾驶模型
-        </p>
-      </div>
-      <Card className="w-full max-w-md border-primary/20">
-        <CardHeader className="space-y-3 pb-4">
-          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-primary/35 bg-primary/10 px-3 py-1 text-xs text-primary">
-            <Sparkles className="h-3.5 w-3.5" />
-            快速开启训练
-          </div>
-          <CardTitle className="text-2xl">注册</CardTitle>
-          <CardDescription>创建账号后即可上传数据并开始训练</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={onSubmit} className="space-y-4">
+    <div className="flex min-h-screen items-center justify-center px-4 py-8">
+      <div className="grid w-full max-w-5xl gap-5 lg:grid-cols-[0.95fr_1.05fr]">
+        <Card className="flex flex-col justify-center">
+          <CardHeader className="space-y-3 pb-5">
+            <div className="ag-eyebrow w-fit">
+              <UserPlus className="h-3.5 w-3.5" />
+              快速开启训练
+            </div>
+            <CardTitle className="text-2xl">创建账号</CardTitle>
+            <CardDescription>注册后即可上传数据集并启动你的训练任务</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="reg-user">用户名</Label>
               <Input
@@ -89,6 +85,7 @@ export function RegisterPage() {
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? <Loader2 className="animate-spin" /> : "注册并登录"}
+              {!loading ? <ArrowRight className="h-4 w-4" /> : null}
             </Button>
             <p className="text-center text-sm text-muted-foreground">
               已有账号？{" "}
@@ -97,8 +94,41 @@ export function RegisterPage() {
               </Link>
             </p>
           </form>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        <section className="ag-page-hero flex min-h-[520px] flex-col justify-between rounded-lg border border-white/10 bg-background/45 p-6 backdrop-blur-xl">
+          <div>
+            <div className="ag-eyebrow">
+              <Sparkles className="h-3.5 w-3.5" />
+              Antigravity Lab
+            </div>
+            <h1 className="mt-6 max-w-xl text-4xl font-semibold leading-tight tracking-tight text-foreground md:text-5xl">
+              从数据集到模型产物，流程更清晰
+            </h1>
+            <p className="mt-4 max-w-lg text-sm leading-6 text-muted-foreground">
+              项目、数据集、域增强、训练任务和推理对比集中在一个控制台里，适合反复实验和复盘。
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="ag-kpi">
+              <Database className="mb-3 h-5 w-5 text-primary" />
+              <p className="text-xs text-muted-foreground">Dataset</p>
+              <p className="mt-1 font-medium">ZIP Upload</p>
+            </div>
+            <div className="ag-kpi">
+              <ShieldCheck className="mb-3 h-5 w-5 text-violet-300" />
+              <p className="text-xs text-muted-foreground">Account</p>
+              <p className="mt-1 font-medium">Secure</p>
+            </div>
+            <div className="ag-kpi">
+              <Mail className="mb-3 h-5 w-5 text-fuchsia-300" />
+              <p className="text-xs text-muted-foreground">Email</p>
+              <p className="mt-1 font-medium">Optional</p>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

@@ -1,11 +1,11 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LogOut, FolderTree, Cpu } from "lucide-react";
+import { Activity, Braces, Cpu, Gauge, LayoutDashboard, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { to: "/", label: "项目", icon: FolderTree },
+  { to: "/", label: "训练工作台", desc: "项目 / 数据 / 任务", icon: LayoutDashboard },
 ];
 
 export function AppShell() {
@@ -15,15 +15,17 @@ export function AppShell() {
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
-      <aside className="border-b border-border/60 bg-card/60 backdrop-blur-xl md:flex md:w-64 md:flex-col md:border-b-0 md:border-r md:shrink-0">
-        <div className="flex items-center gap-2 p-5">
-          <Cpu className="h-8 w-8 text-primary" />
+      <aside className="z-10 border-b border-white/10 bg-background/75 backdrop-blur-2xl md:sticky md:top-0 md:flex md:h-screen md:w-[280px] md:shrink-0 md:flex-col md:border-b-0 md:border-r">
+        <Link to="/" className="flex items-center gap-3 p-5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-md border border-primary/25 bg-primary/[0.12] text-primary shadow-[0_0_30px_-18px_hsl(var(--primary))]">
+            <Cpu className="h-5 w-5" />
+          </div>
           <div>
-            <p className="font-semibold leading-tight">端到端 训练台</p>
+            <p className="font-semibold leading-tight">端到端训练台</p>
             <p className="text-xs text-muted-foreground">Autonomous Lab Console</p>
           </div>
-        </div>
-        <nav className="flex gap-1 px-3 pb-2 md:flex-col md:px-3">
+        </Link>
+        <nav className="flex gap-1 px-3 pb-3 md:flex-col md:px-3">
           {nav.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
@@ -31,24 +33,46 @@ export function AppShell() {
               end={to === "/"}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm transition-all",
+                  "group flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-all",
                   isActive
-                    ? "bg-primary/20 text-primary shadow-[inset_0_1px_0_hsl(var(--primary)/0.35)]"
-                    : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
+                    ? "border border-primary/20 bg-primary/[0.12] text-primary shadow-[inset_0_1px_0_hsl(var(--primary)/0.22)]"
+                    : "border border-transparent text-muted-foreground hover:bg-white/[0.06] hover:text-foreground",
                 )
               }
             >
               <Icon className="h-4 w-4 shrink-0" />
-              {label}
+              <span className="min-w-0">
+                <span className="block leading-tight">{label}</span>
+                <span className="hidden text-xs text-muted-foreground group-hover:text-muted-foreground md:block">
+                  项目 / 数据 / 任务
+                </span>
+              </span>
             </NavLink>
           ))}
         </nav>
-        <div className="hidden p-4 md:mt-auto md:block">
-          <p className="truncate text-xs text-muted-foreground">已登录：{user?.username}</p>
+        <div className="hidden px-4 pb-4 md:mt-auto md:block">
+          <div className="ag-panel-soft p-4">
+            <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
+              <Activity className="h-3.5 w-3.5 text-primary" />
+              <span>控制台状态</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="rounded-md border border-white/10 bg-background/45 p-2">
+                <Gauge className="mb-1 h-3.5 w-3.5 text-violet-300" />
+                <p className="text-muted-foreground">Pipeline</p>
+                <p className="font-medium text-foreground">Ready</p>
+              </div>
+              <div className="rounded-md border border-white/10 bg-background/45 p-2">
+                <Braces className="mb-1 h-3.5 w-3.5 text-primary" />
+                <p className="text-muted-foreground">Session</p>
+                <p className="truncate font-medium text-foreground">{user?.username ?? "-"}</p>
+              </div>
+            </div>
+          </div>
           <Button
             variant="ghost"
             size="sm"
-            className="mt-2 w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
+            className="mt-3 w-full justify-start gap-2"
             onClick={() => {
               logout();
               navigate("/login");
@@ -59,12 +83,12 @@ export function AppShell() {
           </Button>
         </div>
       </aside>
-      <main className="flex-1 overflow-auto p-4 md:p-8">
-        <div className="mx-auto max-w-6xl">
+      <main className="flex-1 overflow-auto">
+        <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
           <Outlet />
         </div>
       </main>
-      <footer className="border-t border-border p-2 text-center text-xs text-muted-foreground md:hidden">
+      <footer className="border-t border-white/10 bg-background/70 p-2 text-center text-xs text-muted-foreground backdrop-blur md:hidden">
         <Link to="/login" onClick={() => logout()} className="underline">
           退出登录
         </Link>

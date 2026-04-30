@@ -25,13 +25,16 @@ npm install
 
 4. **配置后端地址**
 
-复制 `.env.example` 为 `.env`，修改 `VITE_API_BASE_URL` 为你的 Python 服务地址（不要末尾斜杠），例如：
+复制 `.env.example` 为 `.env`。开发环境默认使用 `/api` 由 Vite 转发到后端：
 
 ```env
-VITE_API_BASE_URL=http://127.0.0.1:8000
+VITE_API_BASE_URL=/api
+VITE_API_PROXY_TARGET=http://127.0.0.1:8000
 ```
 
-开发阶段若需避免跨域，也可设为 `VITE_API_BASE_URL=/api`，并在启动 Vite 前设置代理目标（见 `vite.config.ts` 中 `server.proxy`），或在 shell 中：
+如需前端直接访问后端，也可将 `VITE_API_BASE_URL` 改为 Python 服务地址（不要末尾斜杠），例如 `http://127.0.0.1:8000`。
+
+若不用 `.env`，也可以在 shell 中临时指定代理目标：
 
 ```bash
 set VITE_API_PROXY_TARGET=http://127.0.0.1:8000
@@ -44,7 +47,7 @@ npm run dev
 npm run dev
 ```
 
-浏览器访问终端里提示的地址（一般为 `http://localhost:5173`）。
+浏览器访问终端里提示的地址（优先 `http://localhost:5173`；如果端口被占用，Vite 会自动切换到下一个可用端口）。
 
 6. **生产构建**
 

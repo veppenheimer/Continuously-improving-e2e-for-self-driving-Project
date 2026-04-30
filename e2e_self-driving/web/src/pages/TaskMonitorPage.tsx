@@ -10,8 +10,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useTaskLiveProgress } from "@/hooks/useTaskLiveProgress";
 import { modelVariantLabel } from "@/lib/modelVariant";
 import { taskStatusLabel, taskStatusVariant } from "@/lib/taskStatus";
-import { Loader2 } from "lucide-react";
+import { Activity, BarChart3, Loader2, Pause, RefreshCw, Square, Trophy, Wifi, WifiOff } from "lucide-react";
 import { toast } from "sonner";
+
+function ProgressLine({
+  label,
+  value,
+  barClassName,
+  description,
+}: {
+  label: string;
+  value: number;
+  barClassName: string;
+  description?: string;
+}) {
+  const safeValue = Math.max(0, Math.min(100, value));
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-3 text-sm">
+        <span className="font-medium">{label}</span>
+        <span className="font-mono text-xs text-muted-foreground">{safeValue.toFixed(1)}%</span>
+      </div>
+      <div className="ag-progress-track">
+        <div className={`ag-progress-bar ${barClassName}`} style={{ width: `${safeValue}%` }} />
+      </div>
+      {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}
+    </div>
+  );
+}
 
 export function TaskMonitorPage() {
   const { taskId } = useParams<{ taskId: string }>();
@@ -81,10 +107,15 @@ export function TaskMonitorPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">训练监控</h1>
-          <p className="text-muted-foreground">
+      <section className="ag-page-hero">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div className="ag-eyebrow">
+              <Activity className="h-3.5 w-3.5" />
+              Training Monitor
+            </div>
+            <h1 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">训练监控</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
             {summary ? (
               <>
                 <span className="font-medium text-foreground">{summary.name}</span>
@@ -94,16 +125,19 @@ export function TaskMonitorPage() {
               </>
             ) : null}
             ID <code className="text-primary">{taskId}</code>
-            {wsConnected ? " · WebSocket 已连接" : " · 轮询刷新"}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
+            </p>
+            <div className="mt-3 inline-flex items-center gap-2 rounded-md border border-white/10 bg-background/45 px-2.5 py-1 text-xs text-muted-foreground">
+              {wsConnected ? <Wifi className="h-3.5 w-3.5 text-primary" /> : <WifiOff className="h-3.5 w-3.5 text-violet-300" />}
+              {wsConnected ? "WebSocket 已连接" : "轮询刷新"}
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
           {progress ? <Badge variant={taskStatusVariant(progress.status)}>{taskStatusLabel(progress.status)}</Badge> : null}
           <Button variant="outline" size="sm" onClick={() => void refetch()}>
-            刷新
+            <RefreshCw className="h-4 w-4" />刷新
           </Button>
           <Button variant="secondary" size="sm" onClick={() => void onPause()} disabled={progress?.status !== "running"}>
-            暂停
+            <Pause className="h-4 w-4" />暂停
           </Button>
           <Button
             variant="destructive"
@@ -111,12 +145,14 @@ export function TaskMonitorPage() {
             onClick={() => void onStop()}
             disabled={!progress || progress.status === "completed" || progress.status === "stopped" || progress.status === "failed"}
           >
-            终止
+            <Square className="h-4 w-4" />终止
           </Button>
           {progress?.status === "completed" ? (
             <>
               <Button size="sm" asChild>
-                <Link to={`/tasks/${taskId}/results`}>查看结果</Link>
+                <Link to={`/tasks/${taskId}/results`}>
+                  <Trophy className="h-4 w-4" />查看结果
+                </Link>
               </Button>
               {summary?.domainAugmentation ? (
                 <Button size="sm" variant="secondary" asChild>
@@ -125,8 +161,9 @@ export function TaskMonitorPage() {
               ) : null}
             </>
           ) : null}
+          </div>
         </div>
-      </div>
+      </section>
 
       {loading && !progress ? (
         <div className="flex justify-center py-24">
@@ -138,66 +175,37 @@ export function TaskMonitorPage() {
         <>
           <Card>
             <CardHeader>
-              <CardTitle>阶段进度</CardTitle>
-              <CardDescription>
-                Epoch {progress.currentEpoch} / {progress.totalEpochs}
-                {progress.message ? ` · ${progress.message}` : ""}
-              </CardDescription>
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-md border border-primary/20 bg-primary/10 text-primary">
+                  <Activity className="h-4 w-4" />
+                </div>
+                <div>
+                  <CardTitle>阶段进度</CardTitle>
+                  <CardDescription>
+                    Epoch {progress.currentEpoch} / {progress.totalEpochs}
+                    {progress.message ? ` · ${progress.message}` : ""}
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <div className="mb-1 flex items-center justify-between text-sm">
-                  <span>整体进度</span>
-                  <span>
-                    {progress.totalEpochs ? ((progress.currentEpoch / progress.totalEpochs) * 100).toFixed(1) : "0.0"}%
-                  </span>
-                </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full bg-primary transition-all"
-                    style={{
-                      width: `${progress.totalEpochs ? Math.min(100, (progress.currentEpoch / progress.totalEpochs) * 100) : 0}%`,
-                    }}
-                  />
-                </div>
-              </div>
+              <ProgressLine
+                label="整体进度"
+                value={progress.totalEpochs ? (progress.currentEpoch / progress.totalEpochs) * 100 : 0}
+                barClassName="bg-primary"
+              />
 
-              <div>
-                <div className="mb-1 flex items-center justify-between text-sm">
-                  <span>基准阶段（仅 A）</span>
-                  <span>{progress.baselineProgress.toFixed(1)}%</span>
-                </div>
-                <div
-                  className="h-2 rounded-full bg-sky-500 transition-all"
-                  style={{ width: `${Math.max(0, Math.min(100, progress.baselineProgress))}%` }}
-                />
-              </div>
+              <ProgressLine label="基准阶段（仅 A）" value={progress.baselineProgress} barClassName="bg-sky-400" />
 
               {summary?.domainAugmentation ? (
                 <>
-                  <div>
-                    <div className="mb-1 flex items-center justify-between text-sm">
-                      <span>域增强（CycleGAN 生成 C）</span>
-                      <span>{(progress.domainAugmentationProgress ?? 0).toFixed(1)}%</span>
-                    </div>
-                    <div
-                      className="h-2 rounded-full bg-amber-500 transition-all"
-                      style={{ width: `${Math.max(0, Math.min(100, progress.domainAugmentationProgress ?? 0))}%` }}
-                    />
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {progress.domainAugmentationText ?? "等待执行域增强"}
-                    </p>
-                  </div>
-                  <div>
-                    <div className="mb-1 flex items-center justify-between text-sm">
-                      <span>增强阶段（A + C）</span>
-                      <span>{(progress.augmentedProgress ?? 0).toFixed(1)}%</span>
-                    </div>
-                    <div
-                      className="h-2 rounded-full bg-violet-500 transition-all"
-                      style={{ width: `${Math.max(0, Math.min(100, progress.augmentedProgress ?? 0))}%` }}
-                    />
-                  </div>
+                  <ProgressLine
+                    label="域增强（CycleGAN 生成 C）"
+                    value={progress.domainAugmentationProgress ?? 0}
+                    barClassName="bg-violet-400"
+                    description={progress.domainAugmentationText ?? "等待执行域增强"}
+                  />
+                  <ProgressLine label="增强阶段（A + C）" value={progress.augmentedProgress ?? 0} barClassName="bg-fuchsia-400" />
                 </>
               ) : null}
             </CardContent>
@@ -205,8 +213,15 @@ export function TaskMonitorPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Loss 曲线</CardTitle>
-              <CardDescription>实线为训练 Loss，虚线为验证 Loss</CardDescription>
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-md border border-violet-300/20 bg-violet-400/10 text-violet-300">
+                  <BarChart3 className="h-4 w-4" />
+                </div>
+                <div>
+                  <CardTitle>Loss 曲线</CardTitle>
+                  <CardDescription>实线为训练 Loss，虚线为验证 Loss</CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               {series.length > 0 && series.some((item) => item.train.length || item.val.length) ? (

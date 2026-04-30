@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     competition_project_root: Path = Path(__file__).resolve().parent.parent.parent.parent / "e2e_competition"
 
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    cors_origin_regex: str | None = r"https?://(localhost|127\.0\.0\.1):\d+"
 
     @property
     def sqlite_path(self) -> Path:

@@ -23,6 +23,9 @@ def _connect() -> sqlite3.Connection:
     path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(path), check_same_thread=False, timeout=30.0)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=MEMORY")
+    conn.execute("PRAGMA synchronous=NORMAL")
+    conn.execute("PRAGMA foreign_keys=ON")
     return conn
 
 
@@ -529,7 +532,7 @@ def task_row_to_summary(row: sqlite3.Row) -> dict[str, Any]:
             pass
     return {
         "id": row["id"],
-        "projectId": row["project_id"],
+        "project_id": row["project_id"],
         "name": _task_display_name(row),
         "status": row["status"],
         "created_at": row["created_at"],

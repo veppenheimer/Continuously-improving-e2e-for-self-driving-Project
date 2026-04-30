@@ -5,7 +5,7 @@ import type { DomainAugPair } from "@/api/types";
 import { showApiError } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { ArrowLeft, GitCompareArrows, Image, Loader2, ScanSearch } from "lucide-react";
 
 export function DomainAugComparePage() {
   const { taskId } = useParams<{ taskId: string }>();
@@ -68,20 +68,37 @@ export function DomainAugComparePage() {
   if (!taskId) return null;
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">域增强图像对比</h1>
-          <p className="text-muted-foreground">任务 {taskId.slice(0, 8)}… 的 A 域图像与生成的 C 域图像对照</p>
+      <section className="ag-page-hero">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div className="ag-eyebrow">
+              <GitCompareArrows className="h-3.5 w-3.5" />
+              Domain Compare
+            </div>
+            <h1 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">域增强图像对比</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              任务 {taskId.slice(0, 8)}… 的 A 域图像与生成的 C 域图像对照
+            </p>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link to={`/tasks/${taskId}/monitor`}>
+              <ArrowLeft className="h-4 w-4" />返回监控
+            </Link>
+          </Button>
         </div>
-        <Button variant="outline" size="sm" asChild>
-          <Link to={`/tasks/${taskId}/monitor`}>返回监控</Link>
-        </Button>
-      </div>
+      </section>
 
       <Card>
         <CardHeader>
-          <CardTitle>样本选择</CardTitle>
-          <CardDescription>按样本索引浏览 A/C 对照图像</CardDescription>
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-md border border-primary/20 bg-primary/10 text-primary">
+              <ScanSearch className="h-4 w-4" />
+            </div>
+            <div>
+              <CardTitle>样本选择</CardTitle>
+              <CardDescription>按样本索引浏览 A/C 对照图像</CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -92,7 +109,7 @@ export function DomainAugComparePage() {
             <p className="text-sm text-muted-foreground">暂无可用的域增强样本（请先完成开启域增强的训练任务）。</p>
           ) : (
             <select
-              className="flex h-10 w-full max-w-sm rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="ag-select max-w-sm"
               value={activeIndex ?? undefined}
               onChange={(e) => setActiveIndex(Number(e.target.value))}
             >
@@ -109,10 +126,17 @@ export function DomainAugComparePage() {
       {current ? (
         <Card>
           <CardHeader>
-            <CardTitle>A/C 图像并排对比</CardTitle>
-            <CardDescription>
-              A：{current.aName} · C：{current.cName}
-            </CardDescription>
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-md border border-violet-300/20 bg-violet-400/10 text-violet-300">
+                <Image className="h-4 w-4" />
+              </div>
+              <div>
+                <CardTitle>A/C 图像并排对比</CardTitle>
+                <CardDescription>
+                  A：{current.aName} · C：{current.cName}
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {imgLoading ? (
@@ -121,20 +145,20 @@ export function DomainAugComparePage() {
               </div>
             ) : (
               <div className="grid gap-6 md:grid-cols-2">
-                <div>
+                <div className="ag-panel-soft p-3">
                   <p className="mb-2 text-sm font-medium">A（原始域）</p>
                   {aUrl ? (
-                    <img src={aUrl} alt="A 域图像" className="w-full rounded-md border object-contain" />
+                    <img src={aUrl} alt="A 域图像" className="w-full rounded-md border border-white/10 bg-black/25 object-contain" />
                   ) : (
-                    <div className="rounded-md border p-8 text-sm text-muted-foreground">无法加载 A 图像</div>
+                    <div className="rounded-md border border-white/10 p-8 text-sm text-muted-foreground">无法加载 A 图像</div>
                   )}
                 </div>
-                <div>
-                  <p className="mb-2 text-sm font-medium">C（A→B 风格）</p>
+                <div className="ag-panel-soft p-3">
+                  <p className="mb-2 text-sm font-medium">C（A→C 风格）</p>
                   {cUrl ? (
-                    <img src={cUrl} alt="C 域图像" className="w-full rounded-md border object-contain" />
+                    <img src={cUrl} alt="C 域图像" className="w-full rounded-md border border-white/10 bg-black/25 object-contain" />
                   ) : (
-                    <div className="rounded-md border p-8 text-sm text-muted-foreground">无法加载 C 图像</div>
+                    <div className="rounded-md border border-white/10 p-8 text-sm text-muted-foreground">无法加载 C 图像</div>
                   )}
                 </div>
               </div>

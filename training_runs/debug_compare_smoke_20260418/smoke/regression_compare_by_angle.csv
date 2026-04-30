@@ -1,2 +1,0 @@
-﻿groundTruth,count,legacy_mae,legacy_mean_pred,legacy_mean_bias,mobilenet_v1_mae,mobilenet_v1_mean_pred,mobilenet_v1_mean_bias,mobilenet_v2_mae,mobilenet_v2_mean_pred,mobilenet_v2_mean_bias
-0.0,5,0.05069646835327148,0.04538972377777099,0.04538972377777099,0.07759297788143157,0.011366817355155944,0.011366817355155944,0.029963209852576257,0.029963209852576257,0.029963209852576257

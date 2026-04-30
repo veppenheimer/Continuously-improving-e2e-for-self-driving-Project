@@ -4,6 +4,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { LoginPage } from "@/pages/LoginPage";
 import { RegisterPage } from "@/pages/RegisterPage";
 import { DashboardPage } from "@/pages/DashboardPage";
+import { ProjectDetailPage } from "@/pages/ProjectDetailPage";
 import { TaskMonitorPage } from "@/pages/TaskMonitorPage";
 import { TaskResultsPage } from "@/pages/TaskResultsPage";
 import { DomainAugComparePage } from "@/pages/DomainAugComparePage";
@@ -22,6 +23,7 @@ export default function App() {
           }
         >
           <Route index element={<DashboardPage />} />
+          <Route path="projects/:projectId" element={<ProjectDetailPage />} />
           <Route path="tasks/:taskId/monitor" element={<TaskMonitorPage />} />
           <Route path="tasks/:taskId/results" element={<TaskResultsPage />} />
           <Route path="tasks/:taskId/domain-compare" element={<DomainAugComparePage />} />
